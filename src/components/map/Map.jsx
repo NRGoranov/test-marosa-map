@@ -68,7 +68,7 @@ const Map = ({
         <div style={mapWrapperStyle}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                center={defaultCenter}
+                center={currentUserPosition}
                 zoom={17}
                 options={showInfoWindow ? mapOptions : mobileMapOptions}
                 onLoad={onLoad}
