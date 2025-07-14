@@ -39,7 +39,7 @@ const Map = ({
         zoomControl: false,
         clickableIcons: false,
         minZoom: 7,
-        gestureHandling: 'auto'
+        gestureHandling: 'greedy'
     }), []);
 
     const baseWrapperStyle = {
