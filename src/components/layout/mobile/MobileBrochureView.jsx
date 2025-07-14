@@ -18,9 +18,7 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    
     const [slideDirection, setSlideDirection] = useState(0);
-
     const pdfContainerRef = useRef(null);
     const [pdfContainerWidth, setPdfContainerWidth] = useState(0);
 
