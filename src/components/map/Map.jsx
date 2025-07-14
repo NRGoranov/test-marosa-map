@@ -9,7 +9,6 @@ import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtil
 import { mapStyles } from './mapStyles';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
-const defaultCenter = { lat: 42.886, lng: 24.715 };
 
 const Map = ({
     map,
@@ -24,7 +23,6 @@ const Map = ({
     currentUserPosition,
     hoveredPlaceId,
     onMarkerHover,
-    onIdle,
     onMapClick,
 }) => {
     const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
@@ -72,7 +70,6 @@ const Map = ({
                 zoom={17}
                 options={showInfoWindow ? mapOptions : mobileMapOptions}
                 onLoad={onLoad}
-                onIdle={onIdle}
                 onClick={onMapClick}
             >
                 {locations && locations.map((loc) => {
