@@ -22,7 +22,7 @@ const ShareModal = ({ isOpen, onClose, location, details, mapUrl }) => {
     const photoUrl = details?.photos ? details.photos[0].getUrl({ maxWidth: 100, maxHeight: 100 }) : 'https://i.imgur.com/g2a4JAh.png';
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999] p-4" onClick={onClose}>
+        <div className="fixed inset-0 flex items-center justify-center z-[999] p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl p-6 text-center max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-montserrat font-semibold text-[28px] leading-none text-[#1B4712]">Сподели този обект</h2>
