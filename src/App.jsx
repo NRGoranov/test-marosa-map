@@ -8,6 +8,7 @@ export default function App() {
         <Routes>
             <Route path='/' element={<MarosaLocator />} />
             <Route path='/brochure' element={<MobileBrochureView />} />
+            <Route path='/search' element={<MarosaLocator initialSearchState={true} />} />
         </Routes>
     );
 }

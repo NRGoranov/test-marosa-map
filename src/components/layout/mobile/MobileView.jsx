@@ -1,12 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { BottomSheet } from 'react-spring-bottom-sheet';
+import 'react-spring-bottom-sheet/dist/style.css';
 
 import Map from '../../map/Map';
 import MobileViewHeader from '../mobile/MobileViewHeader';
 import SlideDownMenu from '../../ui/SlideDownMenu';
+import LocationList from '../location-list/LocationList';
 
 const MobileView = (props) => {
-    const { onEnterSearch, onHomeMarkerClick, onNavigateToBrochure, ...rest } = props;
+    const {
+        onEnterSearch,
+        onNavigateToBrochure,
+        onMarkerClick,
+        selectedPlace,
+        onCloseInfoWindow,
+        ...rest
+    } = props;
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const sheetRef = useRef();
+
+    useEffect(() => {
+        if (!sheetRef.current) return;
+        if (selectedPlace) {
+            sheetRef.current.snapTo(({ maxHeight }) => maxHeight * 0.55);
+        } else {
+            sheetRef.current.snapTo(({ snapPoints }) => snapPoints[0]);
+        }
+    }, [selectedPlace]);
+
+    const snapPoints = ({ minHeight, maxHeight }) => [
+        63,
+        maxHeight * 0.55,
+        maxHeight - 110,
+    ];
 
     return (
         <div className="h-screen w-screen relative">
@@ -18,26 +45,48 @@ const MobileView = (props) => {
                 />
             </div>
 
-            <div 
-                className="h-full w-full"
-                onClick={onEnterSearch}
-            >
+            <div className="h-full w-full">
                 {props.isLoaded && (
                     <Map
                         {...rest}
-                        onMarkerClick={props.onHomeMarkerClick}
+                        onMarkerClick={onMarkerClick}
+                        selectedPlace={selectedPlace}
                         locations={props.allLocations}
                         showInfoWindow={false}
                     />
                 )}
             </div>
 
-            <SlideDownMenu 
-                isOpen={isMenuOpen} 
-                onClose={() => setIsMenuOpen(false)} 
-                onBrochureClick={onNavigateToBrochure} 
-                menuVariant="home" 
+            <SlideDownMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onBrochureClick={onNavigateToBrochure}
+                menuVariant="home"
             />
+
+            <BottomSheet
+                open
+                blocking={false}
+                ref={sheetRef}
+                snapPoints={snapPoints}
+                defaultSnap={({ snapPoints }) => snapPoints[0]}
+                header={
+                    <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
+                        {selectedPlace ? selectedPlace.name : 'Информация за обект'}
+                    </div>
+                }
+
+                onDismiss={onCloseInfoWindow}
+            >
+                <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
+                    <LocationList
+                        {...props}
+                        locations={selectedPlace ? [selectedPlace] : []}
+                        onListItemClick={onMarkerClick}
+                        isMobileView={true}
+                    />
+                </div>
+            </BottomSheet>
         </div>
     );
 };

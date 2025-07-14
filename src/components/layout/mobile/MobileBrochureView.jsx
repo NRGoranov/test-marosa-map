@@ -71,9 +71,6 @@ const MobileBrochureView = () => {
     }, {
         axis: 'x',
         filterTaps: true,
-        swipe: {
-            threshold: 25,
-        }
     });
     
     const pageTransitions = useTransition(currentPage, {
