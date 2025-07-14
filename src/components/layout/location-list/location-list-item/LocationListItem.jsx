@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import ShareModal from '../../../ui/ShareModal';
+
 
 import { checkIfOpen } from '../../../../utils/timeUtils';
 
@@ -96,14 +96,6 @@ const LocationListItem = React.forwardRef(({
                     </div>
                 </div>
             </div>
-
-            <ShareModal 
-                isOpen={isShareModalOpen}
-                onClose={() => setIsShareModalOpen(false)}
-                location={location}
-                details={details}
-                mapUrl={mapsUrl}
-            />
         </>
     );
 });
