@@ -1,0 +1,231 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useJsApiLoader } from '@react-google-maps/api';
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+
+import { db } from '../firebase';
+
+import DesktopView from '../components/layout/desktop/DesktopView';
+import MobileSearchView from '../components/layout/mobile/MobileSearchView';
+import MobileView from '../components/layout/mobile/MobileView';
+import MobileBrochureView from '../components/layout/mobile/MobileBrochureView';
+
+import StyleInjector from '../components/ui/StyleInjector';
+import { useGooglePlaces } from '../hooks/useGooglePlaces';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+
+const googleMapsApiKey = "AIzaSyB3HnHvGA4yPr85twsipz7YAT6EmZAo1wk";
+
+const libraries = ['places'];
+
+function MarosaLocator() {
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: googleMapsApiKey,
+        libraries,
+    });
+
+    const [locations, setLocations] = useState([]);
+    const [allCities, setAllCities] = useState([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
+    const [map, setMap] = useState(null);
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
+    const [currentUserPosition, setCurrentUserPosition] = useState(null);
+    const [placeDetails, setPlaceDetails] = useState(null);
+    const { allPlaceDetails, isInitialLoading } = useGooglePlaces(map, isLoaded, locations);
+    const [visibleLocations, setVisibleLocations] = useState([]);
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+    const [isSearching, setIsSearching] = useState(false);
+    const markerClickRef = useRef(false);
+    const [activePage, setActivePage] = useState('home');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoadingData(true);
+            try {
+                const locationsQuery = getDocs(collection(db, "locations"));
+                const citiesQuery = getDocs(collection(db, "cities"));
+
+                const [locationsSnapshot, citiesSnapshot] = await Promise.all([locationsQuery, citiesQuery]);
+
+                const locationsData = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setLocations(locationsData);
+
+                const citiesData = citiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setAllCities(citiesData);
+
+                console.log("Successfully fetched locations and cities.");
+
+            } catch (error) {
+                console.error("Error fetching data: ", error);
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+    
+    useEffect(() => {
+        if (isLoaded && map && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    console.log("Geolocation Success! Position:", position.coords);
+                    const userPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                    setCurrentUserPosition(userPos);
+                    map.panTo(userPos);
+                    map.setZoom(15);
+                },
+                () => console.error("Geolocation permission denied or service failed.")
+            );
+        }
+    }, [isLoaded, map]);
+
+    const navigateToBrochure = () => {
+        setActivePage('brochure');
+    };
+
+    const navigateToHome = () => {
+        setActivePage('home');
+    };
+
+    const navigateToSearch = () => {
+        setActivePage('home');
+        setIsSearching(true);
+    };
+
+    const handleCitySelect = async (cityName) => {
+        if (!map) return;
+
+        console.log(`Searching for city: ${cityName}`);
+        const cityDocRef = doc(db, "cities", cityName);
+
+        try {
+            const cityDoc = await getDoc(cityDocRef);
+
+            if (cityDoc.exists()) {
+                const cityData = cityDoc.data();
+                const { position } = cityData;
+
+                map.panTo(position);
+                map.setZoom(11);
+                console.log(`Panned to ${cityName} at`, position);
+            } else {
+                console.error(`City not found in database: ${cityName}`);
+            }
+        } catch (error) {
+            console.error("Error fetching city details: ", error);
+        }
+    };
+
+    const handleMapIdle = useCallback(() => {
+        if (!map || locations.length === 0) return;
+        const bounds = map.getBounds();
+        if (bounds) {
+            const visible = locations.filter(loc =>
+                bounds.contains(loc.position)
+            );
+            setVisibleLocations(visible);
+        }
+    }, [map, locations]);
+
+    const closeInfoWindow = useCallback(() => {
+        setSelectedPlace(null);
+        setPlaceDetails(null);
+    }, []);
+
+    const handleEnterSearchMode = () => {
+        setIsSearching(true);
+    };
+
+    const handleHomeMarkerClick = (place) => {
+        if (map) {
+            map.panTo(place.position);
+            map.setZoom(14);
+        }
+
+        setIsSearching(true);
+    };
+
+    const handleExitSearchMode = () => {
+        setIsSearching(false);
+        closeInfoWindow();
+    };
+
+    const handleMapClick = useCallback(() => {
+        if (markerClickRef.current) {
+            markerClickRef.current = false;
+            return;
+        }
+        closeInfoWindow();
+    }, [closeInfoWindow]);
+
+    const handleMarkerClick = (place) => {
+        markerClickRef.current = true;
+        if (selectedPlace?.placeId === place.placeId) {
+            closeInfoWindow();
+        } else {
+            map.panTo(place.position);
+            setSelectedPlace(place);
+            setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
+        }
+    };
+
+    const onMapLoad = useCallback((map) => setMap(map), []);
+
+    const viewProps = {
+        map,
+        onLoad: onMapLoad,
+        locations: visibleLocations,
+        allLocations: locations,
+        allCities: allCities,
+        isInitialLoading: isInitialLoading || isLoadingData,
+        selectedPlace,
+        placeDetails,
+        allPlaceDetails,
+        onMarkerClick: handleMarkerClick,
+        onCloseInfoWindow: closeInfoWindow,
+        onMapClick: handleMapClick,
+        currentUserPosition,
+        hoveredPlaceId,
+        onMarkerHover: setHoveredPlaceId,
+        onListItemHover: setHoveredPlaceId,
+        onIdle: handleMapIdle,
+        loadError,
+        isLoaded,
+        showInfoWindow: isDesktop,
+    };
+
+    return (
+        <>
+            <StyleInjector />
+            {activePage === 'home' ? (
+                isDesktop ? (
+                    <DesktopView {...viewProps} />
+                ) : (
+                    isSearching ? (
+                        <MobileSearchView 
+                            {...viewProps} 
+                            onExitSearch={handleExitSearchMode} 
+                            onCitySelect={handleCitySelect}
+                        />
+                    ) : (
+                        <MobileView
+                            {...viewProps}
+                            onEnterSearch={handleEnterSearchMode}
+                            onHomeMarkerClick={handleHomeMarkerClick}
+                            onNavigateToBrochure={navigateToBrochure}
+                        />
+                    )
+                )
+            ) : (
+                <MobileBrochureView 
+                    onExit={navigateToHome} 
+                    onSearch={navigateToSearch} 
+                />
+            )}
+        </>
+    );
+}
+
+export default MarosaLocator;
