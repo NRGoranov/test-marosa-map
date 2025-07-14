@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { useNavigate } from 'react-router-dom';
 
 import { db } from '../firebase';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 import MobileView from '../components/layout/mobile/MobileView';
-import MobileBrochureView from '../components/layout/mobile/MobileBrochureView';
+//import MobileBrochureView from '../components/layout/mobile/MobileBrochureView';
 
 import StyleInjector from '../components/ui/StyleInjector';
 import { useGooglePlaces } from '../hooks/useGooglePlaces';
@@ -24,6 +25,7 @@ function MarosaLocator() {
         libraries,
     });
 
+    const navigate = useNavigate();
     const [locations, setLocations] = useState([]);
     const [allCities, setAllCities] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -37,7 +39,6 @@ function MarosaLocator() {
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [isSearching, setIsSearching] = useState(false);
     const markerClickRef = useRef(false);
-    const [activePage, setActivePage] = useState('home');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,7 +66,7 @@ function MarosaLocator() {
 
         fetchData();
     }, []);
-    
+
     useEffect(() => {
         if (isLoaded && map && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -81,8 +82,8 @@ function MarosaLocator() {
         }
     }, [isLoaded, map]);
 
-    const navigateToBrochure = () => {
-        setActivePage('brochure');
+    const handleNavigateToBrochure = () => {
+        navigate('/brochure');
     };
 
     const navigateToHome = () => {
@@ -199,30 +200,23 @@ function MarosaLocator() {
     return (
         <>
             <StyleInjector />
-            {activePage === 'home' ? (
-                isDesktop ? (
-                    <DesktopView {...viewProps} />
-                ) : (
-                    isSearching ? (
-                        <MobileSearchView 
-                            {...viewProps} 
-                            onExitSearch={handleExitSearchMode} 
-                            onCitySelect={handleCitySelect}
-                        />
-                    ) : (
-                        <MobileView
-                            {...viewProps}
-                            onEnterSearch={handleEnterSearchMode}
-                            onHomeMarkerClick={handleHomeMarkerClick}
-                            onNavigateToBrochure={navigateToBrochure}
-                        />
-                    )
-                )
+            {isDesktop ? (
+                <DesktopView {...viewProps} />
             ) : (
-                <MobileBrochureView 
-                    onExit={navigateToHome} 
-                    onSearch={navigateToSearch} 
-                />
+                isSearching ? (
+                    <MobileSearchView
+                        {...viewProps}
+                        onExitSearch={handleExitSearchMode}
+                        onCitySelect={handleCitySelect}
+                    />
+                ) : (
+                    <MobileView
+                        {...viewProps} 
+                        onEnterSearch={handleEnterSearchMode} 
+                        onHomeMarkerClick={handleHomeMarkerClick} 
+                        onNavigateToBrochure={handleNavigateToBrochure} 
+                    />
+                )
             )}
         </>
     );

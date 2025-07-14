@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { useTransition, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
+import { useNavigate } from 'react-router-dom';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -14,7 +15,9 @@ import ChevronLeftIcon from "../../../assets/icons/ChevronLeftIcon";
 import ChevronRightIcon from "../../../assets/icons/ChevronRightIcon";
 
 
-const MobileBrochureView = ({ onExit, onSearch }) => {
+const MobileBrochureView = () => {
+    const navigate = useNavigate();
+
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,6 +37,9 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
     }, []);
 
     const pdfFile = '/marosabrochure.pdf';
+
+    const handleExit = () => navigate('/');
+    const handleSearch = () => navigate('/');
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setTotalPages(numPages);
@@ -103,7 +109,12 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
     return (
         <div className="flex flex-col h-screen w-screen bg-white">
             <div className="flex-shrink-0 p-4 border-b border-gray-200">
-                <MobileViewHeader onLogoClick={onExit} onMenuClick={() => setIsMenuOpen(prev => !prev)} isMenuOpen={isMenuOpen} onSearchClick={onSearch} />
+                <MobileViewHeader 
+                    onLogoClick={handleExit} 
+                    onMenuClick={() => setIsMenuOpen(prev => !prev)} 
+                    isMenuOpen={isMenuOpen} 
+                    onSearchClick={handleSearch} 
+                />
             </div>
             <div className="flex-shrink-0 w-full bg-gray-200 h-1">
                 <div className="bg-[#AFE8A4] h-1 transition-all duration-300 ease-in-out" style={{ width: `${progress}%` }}></div>
@@ -150,7 +161,12 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
                 </button>
             </div>
 
-            <SlideDownMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} onHomeClick={onExit} menuVariant="brochure" />
+            <SlideDownMenu 
+                isOpen={isMenuOpen} 
+                onClose={() => setIsMenuOpen(false)} 
+                onHomeClick={handleExit} 
+                menuVariant="brochure" 
+            />
         </div>
     );
 };
