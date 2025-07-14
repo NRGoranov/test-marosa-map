@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { useTransition, animated } from '@react-spring/web';
+import { useDrag } from '@use-gesture/react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -40,19 +41,36 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
         setTotalPages(numPages);
     };
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         if (currentPage < totalPages) {
             setSlideDirection(1); 
             setCurrentPage(prev => prev + 1);
         }
-    };
+    }, [currentPage, totalPages]);
 
-    const handlePrevious = () => {
+    const handlePrevious = useCallback(() => {
         if (currentPage > 1) {
             setSlideDirection(-1);
             setCurrentPage(prev => prev - 1);
         }
-    };
+    }, [currentPage]);
+    
+    const bind = useDrag(({ swipe: [swipeX], event }) => {
+        event.preventDefault();
+        
+        if (swipeX < 0) {
+            handleNext();
+        } 
+        else if (swipeX > 0) {
+            handlePrevious();
+        }
+    }, {
+        axis: 'x',
+        filterTaps: true,
+        swipe: {
+            threshold: 25,
+        }
+    });
     
     const pageTransitions = useTransition(currentPage, {
         key: currentPage,
@@ -110,7 +128,7 @@ const MobileBrochureView = ({ onExit, onSearch }) => {
                     loading={<div className="text-center text-gray-500 p-10">Зареждане на PDF...</div>}
                     className="w-full h-full"
                 >
-                    <div className="relative w-full h-full">
+                    <div {...bind()} className="relative w-full h-full touch-none">
                         {pageTransitions((style, pageNum) => (
                             <animated.div style={style} className="absolute inset-0 flex justify-center items-start p-4">
                                 <Page 
