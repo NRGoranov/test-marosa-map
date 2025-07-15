@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
-
-import CustomZoomControl from './map-buttons/CustomZoomControl';
+import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
+import CustomZoomControl from './map-buttons/CustomZoomControl';
+
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtils';
+
 import { mapStyles } from './mapStyles';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
@@ -88,7 +89,7 @@ const Map = ({
                     const { url, size } = getMarkerIcons(isSelected, isHovered, detailsForIcon);
 
                     return (
-                        <Marker
+                        <MarkerF
                             key={loc.placeId}
                             position={loc.position}
                             onClick={() => onMarkerClick(loc)}
@@ -106,7 +107,7 @@ const Map = ({
                 })}
 
                 {currentUserPosition && (
-                    <Marker
+                    <MarkerF
                         position={currentUserPosition}
                         title="Your Location"
                         icon={{
@@ -119,13 +120,13 @@ const Map = ({
                 )}
 
                 {showInfoWindow && selectedPlace && (
-                    <InfoWindow
+                    <InfoWindowF
                         position={selectedPlace.position}
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
                         <CustomInfoWindowCard placeDetails={placeDetails} onClose={onCloseInfoWindow} />
-                    </InfoWindow>
+                    </InfoWindowF>
                 )}
             </GoogleMap>
 

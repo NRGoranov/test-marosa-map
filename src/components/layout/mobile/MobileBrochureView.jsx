@@ -39,7 +39,7 @@ const MobileBrochureView = () => {
     const pdfFile = '/marosabrochure.pdf';
 
     const handleExit = () => navigate('/');
-    const handleSearch = () => navigate('/');
+    const handleSearch = () => navigate('/search');
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setTotalPages(numPages);
