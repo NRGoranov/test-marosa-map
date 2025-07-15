@@ -18,7 +18,13 @@ import ChevronRightIcon from "../../../assets/icons/ChevronRightIcon";
 const MobileBrochureView = () => {
     const navigate = useNavigate();
 
-    const [currentPage, setCurrentPage] = useState(1);
+    const getInitialPage = () => {
+        const params = new URLSearchParams(window.location.search);
+        const page = parseInt(params.get('page'), 10);
+        return isNaN(page) || page < 1 ? 1 : page;
+    };
+
+    const [currentPage, setCurrentPage] = useState(getInitialPage());
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [slideDirection, setSlideDirection] = useState(0);
@@ -36,6 +42,12 @@ const MobileBrochureView = () => {
         return () => { if (currentRef) observer.unobserve(currentRef); };
     }, []);
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', currentPage);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+    }, [currentPage]);
+
     const pdfFile = '/marosabrochure.pdf';
 
     const handleExit = () => navigate('/');
@@ -47,7 +59,7 @@ const MobileBrochureView = () => {
 
     const handleNext = useCallback(() => {
         if (currentPage < totalPages) {
-            setSlideDirection(1); 
+            setSlideDirection(1);
             setCurrentPage(prev => prev + 1);
         }
     }, [currentPage, totalPages]);
@@ -58,13 +70,13 @@ const MobileBrochureView = () => {
             setCurrentPage(prev => prev - 1);
         }
     }, [currentPage]);
-    
+
     const bind = useDrag(({ swipe: [swipeX], event }) => {
         event.preventDefault();
-        
+
         if (swipeX < 0) {
             handleNext();
-        } 
+        }
         else if (swipeX > 0) {
             handlePrevious();
         }
@@ -72,7 +84,7 @@ const MobileBrochureView = () => {
         axis: 'x',
         filterTaps: true,
     });
-    
+
     const pageTransitions = useTransition(currentPage, {
         key: currentPage,
         from: { transform: `translateX(${slideDirection * 100}%)`, opacity: 0 },
@@ -100,17 +112,17 @@ const MobileBrochureView = () => {
             alert('Неуспешно споделяне.');
         }
     };
-    
+
     const progress = totalPages > 0 ? (currentPage / totalPages) * 100 : 0;
 
     return (
         <div className="flex flex-col h-screen w-screen bg-white">
             <div className="flex-shrink-0 p-4 border-b border-gray-200">
-                <MobileViewHeader 
-                    onLogoClick={handleExit} 
-                    onMenuClick={() => setIsMenuOpen(prev => !prev)} 
-                    isMenuOpen={isMenuOpen} 
-                    onSearchClick={handleSearch} 
+                <MobileViewHeader
+                    onLogoClick={handleExit}
+                    onMenuClick={() => setIsMenuOpen(prev => !prev)}
+                    isMenuOpen={isMenuOpen}
+                    onSearchClick={handleSearch}
                 />
             </div>
             <div className="flex-shrink-0 w-full bg-gray-200 h-1">
@@ -137,7 +149,7 @@ const MobileBrochureView = () => {
                     <div {...bind()} className="relative w-full h-full touch-none">
                         {pageTransitions((style, pageNum) => (
                             <animated.div style={style} className="absolute inset-0 flex justify-center items-start p-4">
-                                <Page 
+                                <Page
                                     key={pageNum}
                                     pageNumber={pageNum}
                                     width={pdfContainerWidth ? pdfContainerWidth - 32 : 0}
@@ -158,11 +170,11 @@ const MobileBrochureView = () => {
                 </button>
             </div>
 
-            <SlideDownMenu 
-                isOpen={isMenuOpen} 
-                onClose={() => setIsMenuOpen(false)} 
-                onHomeClick={handleExit} 
-                menuVariant="brochure" 
+            <SlideDownMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onHomeClick={handleExit}
+                menuVariant="brochure"
             />
         </div>
     );

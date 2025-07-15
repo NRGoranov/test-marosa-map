@@ -201,13 +201,13 @@ function MarosaLocator({ initialSearchState = false }) {
                 isSearching ? (
                     <MobileSearchView 
                         {...viewProps} 
-                        onExitSearch={handleExitSearchMode} // Use the new router-aware function
+                        onExitSearch={handleExitSearchMode} 
                         onCitySelect={handleCitySelect}
                     />
                 ) : (
                     <MobileView
                         {...viewProps}
-                        onEnterSearch={handleEnterSearchMode} // Use the new router-aware function
+                        onEnterSearch={handleEnterSearchMode} 
                         onNavigateToBrochure={() => navigate('/brochure')}
                         onMarkerClick={handleMarkerClick}
                         selectedPlace={selectedPlace}
