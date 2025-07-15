@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, MarkerF, InfoWindowF, Data } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
 import CustomZoomControl from './map-buttons/CustomZoomControl';
@@ -8,6 +8,8 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtils';
 
 import { mapStyles } from './mapStyles';
+
+import borderData from '../../data/bulgaria-border.json';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
 
@@ -75,6 +77,18 @@ const Map = ({
                 onIdle={onIdle}
                 onClick={onMapClick}
             >
+
+                <Data
+                    onLoad={(data) => {
+                        data.addGeoJson(borderData);
+                        data.setStyle({
+                            fillOpacity: 0,
+                            strokeColor: '#1B4712',
+                            strokeWeight: 4,
+                        });
+                    }}
+                />
+
                 {locations && locations.map((loc) => {
                     const isSelected = selectedPlace?.placeId === loc.placeId;
                     const isHovered = hoveredPlaceId === loc.placeId;
