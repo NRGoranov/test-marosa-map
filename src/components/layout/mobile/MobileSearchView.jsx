@@ -179,15 +179,6 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                 </BottomSheet>
                 )}
             </div>
-
-            {isSheetAtTop && (
-                <MapButton
-                    onClick={() => {
-                        setIsSheetAtTop(false);
-                        sheetRef.current.snapTo(({ snapPoints }) => snapPoints[0]);
-                    }}
-                />
-            )}
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { GoogleMap, MarkerF, InfoWindowF, Data } from '@react-google-maps/api';
+import { GoogleMap, Marker, InfoWindow, Data } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
 import CustomZoomControl from './map-buttons/CustomZoomControl';
@@ -103,7 +103,7 @@ const Map = ({
                     const { url, size } = getMarkerIcons(isSelected, isHovered, detailsForIcon);
 
                     return (
-                        <MarkerF
+                        <Marker
                             key={loc.placeId}
                             position={loc.position}
                             onClick={() => onMarkerClick(loc)}
@@ -121,7 +121,7 @@ const Map = ({
                 })}
 
                 {currentUserPosition && (
-                    <MarkerF
+                    <Marker
                         position={currentUserPosition}
                         title="Your Location"
                         icon={{
@@ -134,13 +134,13 @@ const Map = ({
                 )}
 
                 {showInfoWindow && selectedPlace && (
-                    <InfoWindowF
+                    <InfoWindow
                         position={selectedPlace.position}
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
                         <CustomInfoWindowCard placeDetails={placeDetails} onClose={onCloseInfoWindow} />
-                    </InfoWindowF>
+                    </InfoWindow>
                 )}
             </GoogleMap>
 
