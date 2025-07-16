@@ -13,6 +13,8 @@ import borderData from '../../data/bulgaria-border.json';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
 
+const DEFAULT_CENTER = { lat: 42.7339, lng: 25.4858 };
+
 const Map = ({
     map,
     onLoad,
@@ -35,6 +37,8 @@ const Map = ({
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
+    const center = currentUserPosition || DEFAULT_CENTER;
+
     const mapOptions = useMemo(() => ({
         styles: mapStyles,
         disableDefaultUI: true,
@@ -55,7 +59,7 @@ const Map = ({
         top: 0,
         left: 0,
         width: '100vw',
-        height: '100vh',
+        height: '-webkit-fill-available',        //height: '100vh',
         zIndex: 1000,
     };
 
@@ -70,8 +74,8 @@ const Map = ({
         <div style={mapWrapperStyle}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                center={currentUserPosition}
-                zoom={17}
+                center={center}
+                zoom={currentUserPosition ? 14 : 7}
                 options={showInfoWindow ? mapOptions : mobileMapOptions}
                 onLoad={onLoad}
                 onIdle={onIdle}
@@ -84,7 +88,8 @@ const Map = ({
                         data.setStyle({
                             fillOpacity: 0,
                             strokeColor: '#1B4712',
-                            strokeWeight: 4,
+                            strokeWeight: 2,
+                            clickable: false,
                         });
                     }}
                 />
