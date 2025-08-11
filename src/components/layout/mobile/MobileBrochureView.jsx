@@ -170,11 +170,11 @@ const MobileBrochureView = () => {
                 </button>
             </div>
 
-            <SlideDownMenu
-                isOpen={isMenuOpen}
-                onClose={() => setIsMenuOpen(false)}
-                onHomeClick={handleExit}
-                menuVariant="brochure"
+            <SlideDownMenu 
+                isOpen={isMenuOpen} 
+                onClose={() => setIsMenuOpen(false)} 
+                onHomeClick={handleExit} 
+                menuVariant="brochure" 
             />
         </div>
     );
