@@ -25,7 +25,6 @@ const LeftPanel = (props) => {
         <div className="w-full md:w-1/3 flex flex-col h-screen bg-white shadow-lg z-10 p-8">
             <div className="flex-shrink-0">
                 <Header />
-                <h1>HI</h1>
                 <div className="w-fit mt-10">
                     <main>
                         <p className="text-[#4CAF50] font-medium mb-10">Градинарят знае най-добре</p>
