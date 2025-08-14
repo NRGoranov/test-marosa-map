@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 
-
-
 import { checkIfOpen } from '../../../../utils/timeUtils';
 
 import StarRating from '../../../ui/StarRating';
@@ -21,7 +19,9 @@ const LocationListItem = React.forwardRef(({
 }, ref) => {
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const status = details ? checkIfOpen(details) : { statusText: "Зарежда се...", detailText: "", color: "text-gray-500" };
-    const photoUrl = details?.photos ? details.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png';
+    const photoUrl = location.imageUrl
+        ? location.imageUrl
+        : (details?.photos ? details.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png');
     const mapsUrl = location.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(details?.name)}`;
 
     const handleShare = (e) => {
@@ -50,7 +50,7 @@ const LocationListItem = React.forwardRef(({
                     <div className="flex flex-col gap-2 px-2 pb-2">
                         <div className="flex justify-between items-start gap-2">
                             <h3 onClick={onClick} className="font-montserrat font-semibold text-2xl leading-[29px] text-[#1B4712] flex-grow cursor-pointer break-words">
-                                {details?.name || location.name}
+                                {location.name || details?.name}
                             </h3>
 
                             <div className="flex items-center space-x-2 flex-shrink-0">

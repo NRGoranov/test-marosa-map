@@ -1,6 +1,5 @@
 import React from "react";
 
-import MapButton from "../../ui/MapButton";
 import CityIcon from "../../../assets/icons/CityIcon";
 import LocationPinIcon from "../../../assets/icons/LocationPinIcon";
 import TopLeftArrowIcon from "../../../assets/icons/TopLeftArrowIcon";
@@ -55,8 +54,6 @@ return (
                     )}
                 </div>
             </div>
-            
-            <MapButton onClick={onExitSearch} />
         </>
     );
 };

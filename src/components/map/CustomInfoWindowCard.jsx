@@ -4,11 +4,13 @@ import { checkIfOpen } from '../../utils/timeUtils';
 import StarRating from '../ui/StarRating';
 import DirectionsIcon from '../../assets/icons/DirectionsIcon';
 
-const CustomInfoWindowCard = ({ placeDetails, onClose }) => {
+const CustomInfoWindowCard = ({ location, placeDetails, onClose }) => {
     if (!placeDetails) return null;
 
     const status = checkIfOpen(placeDetails);
-    const photoUrl = placeDetails.photos ? placeDetails.photos[0].getUrl() : 'https://i.imgur.com/g2a4JAh.png';
+    const photoUrl = location.imageUrl
+        ? location.imageUrl
+        : (placeDetails.photos ? placeDetails.photos[0].getUrl() : 'https://i.imgur.com/g2a4JAh.png');
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(placeDetails.formatted_address)}&destination_place_id=${placeDetails.place_id}`;
 
     return (
@@ -20,12 +22,12 @@ const CustomInfoWindowCard = ({ placeDetails, onClose }) => {
                 <img src={photoUrl} alt={placeDetails.name} className="w-20 h-20 rounded-lg object-cover" />
             </div>
             <div className="flex-grow">
-                <h3 className="text-lg font-bold text-gray-800 leading-tight pr-8">{placeDetails.name}</h3>
+                <h3 className="text-lg font-bold text-gray-800 leading-tight pr-8">{location.name || placeDetails.name}</h3>
                 <div className="flex items-center space-x-2 mt-1">
                     <span className="text-sm font-medium text-gray-600">{placeDetails.rating}</span>
                     <StarRating rating={placeDetails.rating} starSize="text-sm" />
                 </div>
-                
+
                 <div className="text-sm mt-1 flex items-baseline gap-x-2">
                     <span className={`font-semibold ${status.color}`}>
                         {status.statusText}
