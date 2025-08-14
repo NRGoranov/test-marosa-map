@@ -144,7 +144,7 @@ const Map = ({
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
-                        <CustomInfoWindowCard placeDetails={placeDetails} onClose={onCloseInfoWindow} />
+                        <CustomInfoWindowCard placeDetails={placeDetails} location={selectedPlace} onClose={onCloseInfoWindow} />
                     </InfoWindow>
                 )}
             </GoogleMap>
