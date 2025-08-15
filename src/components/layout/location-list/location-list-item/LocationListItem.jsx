@@ -13,11 +13,13 @@ const LocationListItem = React.forwardRef(({
     onClick,
     onMouseOver,
     onMouseOut,
+    onShareClick, //
     isSelected,
     isHovered,
     isMobileView
 }, ref) => {
-    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    //const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
     const status = details ? checkIfOpen(details) : { statusText: "Зарежда се...", detailText: "", color: "text-gray-500" };
     const photoUrl = location.imageUrl
         ? location.imageUrl
@@ -26,7 +28,7 @@ const LocationListItem = React.forwardRef(({
 
     const handleShare = (e) => {
         e.stopPropagation();
-        setIsShareModalOpen(true);
+        onShareClick();
     };
 
     const cardWrapperClassName = `p-1 rounded-[26px_82px_26px_26px] transition-all duration-200 ${!isMobileView && (isSelected || isHovered) ? 'ring-2 ring-offset-2 ring-[#1B4712]' : ''

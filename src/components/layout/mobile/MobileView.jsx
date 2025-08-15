@@ -6,6 +6,7 @@ import Map from '../../map/Map';
 import MobileViewHeader from '../mobile/MobileViewHeader';
 import SlideDownMenu from '../../ui/SlideDownMenu';
 import LocationList from '../location-list/LocationList';
+import MobileShareModal from './MobileShareModal';
 
 const MobileView = (props) => {
     const {
@@ -18,6 +19,7 @@ const MobileView = (props) => {
     } = props;
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const sheetRef = useRef();
 
     useEffect(() => {
@@ -34,6 +36,12 @@ const MobileView = (props) => {
         maxHeight * 0.55,
         maxHeight - 110,
     ];
+
+    const handleShareClick = () => {
+        if (selectedPlace) {
+            setIsShareModalOpen(true);
+        }
+    };
 
     return (
         <div className="h-screen w-screen relative">
@@ -83,10 +91,17 @@ const MobileView = (props) => {
                         {...props}
                         locations={selectedPlace ? [selectedPlace] : []}
                         onListItemClick={onMarkerClick}
+                        onShareClick={handleShareClick}
                         isMobileView={true}
                     />
                 </div>
             </BottomSheet>
+
+            <MobileShareModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                place={selectedPlace}
+            />
         </div>
     );
 };

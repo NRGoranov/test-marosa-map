@@ -5,6 +5,7 @@ import { useDrag } from '@use-gesture/react';
 import { useNavigate } from 'react-router-dom';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
+
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
