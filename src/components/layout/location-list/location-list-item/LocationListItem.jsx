@@ -6,7 +6,6 @@ import StarRating from '../../../ui/StarRating';
 import DirectionsIcon from '../../../../assets/icons/DirectionsIcon';
 import ShareLocationIcon from '../../../../assets/icons/ShareLocationIcon';
 
-
 const LocationListItem = React.forwardRef(({
     location,
     details,
@@ -24,11 +23,13 @@ const LocationListItem = React.forwardRef(({
     const photoUrl = location.imageUrl
         ? location.imageUrl
         : (details?.photos ? details.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png');
-    const mapsUrl = location.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(details?.name)}`;
+    //const mapsUrl = location.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(details?.name)}`;
+    const locationName = details?.name || location.name;
+    const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName)}`;
 
     const handleShare = (e) => {
         e.stopPropagation();
-        onShareClick();
+        onShareClick(location, details);
     };
 
     const cardWrapperClassName = `p-1 rounded-[26px_82px_26px_26px] transition-all duration-200 ${!isMobileView && (isSelected || isHovered) ? 'ring-2 ring-offset-2 ring-[#1B4712]' : ''

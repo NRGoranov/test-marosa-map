@@ -19,7 +19,8 @@ const MobileView = (props) => {
     } = props;
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [locationToShare, setLocationToShare] = useState(null);
+    //const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const sheetRef = useRef();
 
     useEffect(() => {
@@ -37,10 +38,32 @@ const MobileView = (props) => {
         maxHeight - 110,
     ];
 
-    const handleShareClick = () => {
-        if (selectedPlace) {
-            setIsShareModalOpen(true);
+    const handleShareClick = (location, details) => {
+        const combinedData = {
+            ...location,
+            ...details,
+            name: details?.name || location.name
+        };
+
+        let finalMapsUrl = '';
+
+        const lat = details?.geometry?.location?.lat();
+        const lng = details?.geometry?.location?.lng();
+
+        if (lat && lng) {
+            // Added the missing "/" after "/dir//"
+            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
+        } else {
+            // Added the missing "/" after "/dir//"
+            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
         }
+
+        const comprehensiveLocationData = {
+            ...combinedData,
+            mapsUrl: finalMapsUrl
+        };
+
+        setLocationToShare(comprehensiveLocationData);
     };
 
     return (
@@ -98,9 +121,9 @@ const MobileView = (props) => {
             </BottomSheet>
 
             <MobileShareModal
-                isOpen={isShareModalOpen}
-                onClose={() => setIsShareModalOpen(false)}
-                place={selectedPlace}
+                isOpen={!!locationToShare}
+                onClose={() => setLocationToShare(null)}
+                place={locationToShare}
             />
         </div>
     );

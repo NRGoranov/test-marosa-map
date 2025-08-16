@@ -11,25 +11,39 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
         }
     }, [isOpen]);
 
-    const googleMapsUrl = place
-        ? place.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}`
-        : '';
+    const googleMapsUrl = place?.mapsUrl || '';
+    //const googleMapsUrl = place
+    //    ? place.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}`
+    //    : '';
 
     const handleCopy = useCallback(() => {
-        if (!googleMapsUrl) return;
-        navigator.clipboard.writeText(googleMapsUrl);
-        setIsCopied(true);
+        console.log('Attempting to copy URL:', googleMapsUrl);
+
+        if (!googleMapsUrl) {
+            console.error('Copy failed: URL is empty.');
+            return;
+        }
+
+        navigator.clipboard.writeText(googleMapsUrl)
+            .then(() => {
+                setIsCopied(true);
+            })
+            .catch(err => {
+                console.error('Could not copy text: ', err);
+                alert('Не може да се копира линка. Проверете конзолата за грешки.');
+            });
     }, [googleMapsUrl]);
 
     if (!isOpen || !place) {
         return null;
     }
 
-    const encodedUrl = place ? encodeURIComponent(googleMapsUrl) : '';
+    //const encodedUrl = place ? encodeURIComponent(googleMapsUrl) : '';
+    const encodedUrl = encodeURIComponent(googleMapsUrl);
 
     const shareOptions = [
         {
-            name: 'Копирай линка', // Copy Link
+            name: 'Копирай линка',
             icon: <FiCopy size={24} />,
             action: handleCopy,
             isLink: false
