@@ -15,7 +15,7 @@ export const useGooglePlaces = (map, isLoaded, locations) => {
             return new Promise((resolve) => {
                 const request = {
                     placeId: loc.placeId,
-                    fields: ['name', 'rating', 'opening_hours', 'photos', 'utc_offset_minutes', 'formatted_address', 'place_id']
+                    fields: ['name', 'rating', 'opening_hours', 'photos', 'utc_offset_minutes', 'formatted_address', 'place_id', 'geometry']
                 };
 
                 placesService.getDetails(request, (details, status) => {
