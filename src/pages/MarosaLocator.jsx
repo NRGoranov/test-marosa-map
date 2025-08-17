@@ -90,7 +90,7 @@ function MarosaLocator({ initialSearchState = false }) {
     };
 
     const handleCitySelect = useCallback(async (cityName) => {
-        if (!map) return; // Guard clause
+        if (!map) return;
 
         console.log(`Searching for city: ${cityName}`);
         const cityDocRef = doc(db, "cities", cityName);
@@ -159,9 +159,9 @@ function MarosaLocator({ initialSearchState = false }) {
             setSelectedPlace(null);
             setPlaceDetails(null);
         } else {
-            if (map) { // Guard clause
+            if (map) {
                 map.panTo(place.position);
-                map.setZoom(14);
+                map.setZoom(18);
             }
             setSelectedPlace(place);
             setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
