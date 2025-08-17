@@ -121,8 +121,8 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
 
     return (
         <div className="flex flex-col h-screen w-screen bg-white overflow-hidden">
-            {/* 1. Static Search Header (Unchanged) */}
-            <div className="p-4 border-b border-gray-200 flex-shrink-0 z-40 bg-white flex items-center gap-10">
+            {/* 1. Static Search Header. It is now separate from the content below. */}
+            <div className="p-4 border-b border-gray-200 flex-shrink-0 z-20 flex items-center gap-10">
                 <div className="relative flex-grow">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <SearchIcon />
@@ -141,43 +141,54 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                     >
                         <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
+                    {/* The SearchResults component was incorrectly here. It has been moved. */}
                 </div>
             </div>
 
-            {/* 2. Content Area - MODIFIED STRUCTURE */}
+            {/* 2. Dynamic Content Area. This will stretch to fill the remaining space. */}
             <div className="flex-grow relative">
-                {/* Map is now ALWAYS rendered in the background */}
-                <div className="w-full h-full">
-                    {loadError && <div>Error loading maps.</div>}
-                    {!isLoaded && <div className="text-gray-600">Loading Map...</div>}
-                    {isLoaded && <Map {...props} locations={allLocations} />}
-                </div>
-
-                {/* We now render EITHER the search results OR the bottom sheet ON TOP of the map */}
                 {searchTerm ? (
+                    // If searching, show the results. It will now correctly fill the space BELOW the header.
                     <SearchResults
                         results={searchResults}
                         onCityClick={handleCityClick}
                         onLocationClick={handleLocationClick}
                     />
                 ) : (
-                    <BottomSheet open>
-                        {/* ... BottomSheet content ... */}
-                        <div className="flex flex-col items-center justify-center">
-                            <h2 className="text-lg font-bold text-gray-800 pt-2">
-                                {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
-                            </h2>
+                    // Otherwise, show the map and the bottom sheet.
+                    <>
+                        <div className="w-full h-full">
+                            {loadError && <div>Error loading maps.</div>}
+                            {!isLoaded && <div className="text-gray-600">Loading Map...</div>}
+                            {isLoaded && <Map {...props} locations={allLocations} />}
                         </div>
-                        <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
-                            <LocationList
-                                {...props}
-                                onListItemClick={onMarkerClick}
-                                onListItemHover={onListItemHover}
-                                itemRefs={itemRefs}
-                                isMobileView={true}
-                            />
-                        </div>
-                    </BottomSheet>
+                        <BottomSheet
+                            open
+                            blocking={false}
+                            ref={sheetRef}
+                            snapPoints={snapPoints}
+                            defaultSnap={({ snapPoints }) => snapPoints[0]}
+                            onSpringStart={handleSpringStart}
+                            onSpringEnd={handleSpringEnd}
+                            header={
+                                <div className="flex flex-col items-center justify-center">
+                                    <h2 className="text-lg font-bold text-gray-800 pt-2">
+                                        {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
+                                    </h2>
+                                </div>
+                            }
+                        >
+                            <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
+                                <LocationList
+                                    {...props}
+                                    onListItemClick={onMarkerClick}
+                                    onListItemHover={onListItemHover}
+                                    itemRefs={itemRefs}
+                                    isMobileView={true}
+                                />
+                            </div>
+                        </BottomSheet>
+                    </>
                 )}
             </div>
         </div>
