@@ -131,7 +131,7 @@ function MarosaLocator({ initialSearchState = false }) {
 
     const handleEnterSearchMode = () => {
         closeInfoWindow();
-        navigate('/search'); 
+        navigate('/search');
     };
 
     const handleExitSearchMode = () => {
@@ -161,7 +161,10 @@ function MarosaLocator({ initialSearchState = false }) {
         if (selectedPlace?.placeId === place.placeId) {
             closeInfoWindow();
         } else {
-            map.panTo(place.position);
+            if (map) { // Good practice to check if map is available
+                map.panTo(place.position);
+                map.setZoom(14); // <<< --- ADD THIS LINE
+            }
             setSelectedPlace(place);
             setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
         }
@@ -199,15 +202,15 @@ function MarosaLocator({ initialSearchState = false }) {
                 <DesktopView {...viewProps} />
             ) : (
                 isSearching ? (
-                    <MobileSearchView 
-                        {...viewProps} 
-                        onExitSearch={handleExitSearchMode} 
+                    <MobileSearchView
+                        {...viewProps}
+                        onExitSearch={handleExitSearchMode}
                         onCitySelect={handleCitySelect}
                     />
                 ) : (
                     <MobileView
                         {...viewProps}
-                        onEnterSearch={handleEnterSearchMode} 
+                        onEnterSearch={handleEnterSearchMode}
                         onNavigateToBrochure={() => navigate('/brochure')}
                         onMarkerClick={handleMarkerClick}
                         selectedPlace={selectedPlace}
