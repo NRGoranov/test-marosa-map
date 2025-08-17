@@ -124,7 +124,7 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                         onChange={handleSearchChange}
                         autoFocus={true}
                         placeholder="Търси обекти..."
-                        className="w-full bg-gray-100 rounded-full pl-12 pr-10 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#1B4712]"
+                        className="w-full bg-gray-100 rounded-full pl-12 pr-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#1B4712]"
                     />
                     <button
                         onClick={searchTerm ? () => setSearchTerm('') : onExitSearch}
@@ -132,50 +132,52 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                     >
                         <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
+
+                    {searchTerm && (
+                        <SearchResults
+                            results={searchResults}
+                            onCityClick={handleCityClick}
+                            onLocationClick={handleLocationClick}
+                        />
+                    )}
                 </div>
             </div>
 
-            {searchTerm ? (
-                <SearchResults
-                    results={searchResults}
-                    onCityClick={handleCityClick}
-                    onLocationClick={handleLocationClick}
-                />
-            ) : (
-                <div className="flex-grow relative">
-                    <div className="w-full h-full">
-                        {loadError && <div>Error loading maps.</div>}
-                        {!isLoaded && <div className="text-gray-600">Loading Map...</div>}
-                        {isLoaded && <Map {...props} locations={allLocations} />}
-                    </div>
-                    <BottomSheet
-                        open
-                        blocking={false}
-                        ref={sheetRef}
-                        snapPoints={snapPoints}
-                        defaultSnap={({ snapPoints }) => snapPoints[0]}
-                        onSpringStart={handleSpringStart}
-                        onSpringEnd={handleSpringEnd}
-                        header={
-                            <div className="flex flex-col items-center justify-center">
-                                <h2 className="text-lg font-bold text-gray-800 pt-2">
-                                    {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
-                                </h2>
-                            </div>
-                        }
-                    >
-                        <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
-                            <LocationList
-                                {...props}
-                                onListItemClick={onMarkerClick}
-                                onListItemHover={onListItemHover}
-                                itemRefs={itemRefs}
-                                isMobileView={true}
-                            />
-                        </div>
-                    </BottomSheet>
+            <div className="flex-grow relative">
+                <div className="w-full h-full">
+                    {loadError && <div>Error loading maps.</div>}
+                    {!isLoaded && <div className="text-gray-600">Loading Map...</div>}
+                    {isLoaded && <Map {...props} locations={allLocations} />}
                 </div>
-            )}
+
+                {!searchTerm && (<BottomSheet
+                    open
+                    blocking={false}
+                    ref={sheetRef}
+                    snapPoints={snapPoints}
+                    defaultSnap={({ snapPoints }) => snapPoints[0]}
+                    onSpringStart={handleSpringStart}
+                    onSpringEnd={handleSpringEnd}
+                    header={
+                        <div className="flex flex-col items-center justify-center">
+                            <h2 className="text-lg font-bold text-gray-800 pt-2">
+                                {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
+                            </h2>
+                        </div>
+                    }
+                >
+                    <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
+                        <LocationList
+                            {...props}
+                            onListItemClick={onMarkerClick}
+                            onListItemHover={onListItemHover}
+                            itemRefs={itemRefs}
+                            isMobileView={true}
+                        />
+                    </div>
+                </BottomSheet>
+                )}
+            </div>
         </div>
     );
 };
