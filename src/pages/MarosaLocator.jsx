@@ -161,7 +161,7 @@ function MarosaLocator({ initialSearchState = false }) {
         } else {
             if (map) {
                 map.panTo(place.position);
-                map.setZoom(18);
+                map.setZoom(14);
             }
             setSelectedPlace(place);
             setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
