@@ -10,7 +10,7 @@ const SearchResults = ({ results, onCityClick, onLocationClick, onExitSearch }) 
     const hasResults = cities.length > 0 || locations.length > 0;
 
     return (
-        <div className="fixed inset-0 top-[68px] bg-white z-30 flex flex-col">
+        <div className="absolute inset-0 bg-white z-30 flex flex-col">
             <div className="flex-grow overflow-y-auto">
                 {cities.length > 0 && (
                     <div className="p-4">
