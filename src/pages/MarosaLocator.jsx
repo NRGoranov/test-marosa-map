@@ -89,19 +89,16 @@ function MarosaLocator({ initialSearchState = false }) {
         navigate('/brochure');
     };
 
-    const handleCitySelect = async (cityName) => {
-        if (!map) return;
+    const handleCitySelect = useCallback(async (cityName) => {
+        if (!map) return; // Guard clause
 
         console.log(`Searching for city: ${cityName}`);
         const cityDocRef = doc(db, "cities", cityName);
-
         try {
             const cityDoc = await getDoc(cityDocRef);
-
             if (cityDoc.exists()) {
                 const cityData = cityDoc.data();
                 const { position } = cityData;
-
                 map.panTo(position);
                 map.setZoom(11);
                 console.log(`Panned to ${cityName} at`, position);
@@ -111,7 +108,7 @@ function MarosaLocator({ initialSearchState = false }) {
         } catch (error) {
             console.error("Error fetching city details: ", error);
         }
-    };
+    }, [map]);
 
     const handleMapIdle = useCallback(() => {
         if (!map || locations.length === 0) return;
@@ -156,19 +153,20 @@ function MarosaLocator({ initialSearchState = false }) {
         closeInfoWindow();
     }, [closeInfoWindow]);
 
-    const handleMarkerClick = (place) => {
+    const handleMarkerClick = useCallback((place) => {
         markerClickRef.current = true;
         if (selectedPlace?.placeId === place.placeId) {
-            closeInfoWindow();
+            setSelectedPlace(null);
+            setPlaceDetails(null);
         } else {
-            if (map) {
+            if (map) { // Guard clause
                 map.panTo(place.position);
                 map.setZoom(14);
             }
             setSelectedPlace(place);
             setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
         }
-    };
+    }, [map, selectedPlace, allPlaceDetails]);
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
