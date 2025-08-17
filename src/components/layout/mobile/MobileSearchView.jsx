@@ -34,12 +34,20 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
         const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase();
 
         const matchingCities = allCities
-            .filter(city => city.name.toLowerCase().startsWith(lowerCaseSearchTerm))
+            .filter(city => city.name.toLowerCase().includes(lowerCaseSearchTerm))
             .map(city => city.name);
 
-        const matchingLocations = allLocations.filter(loc =>
-            (loc.objectType && loc.objectType.toLowerCase().startsWith(lowerCaseSearchTerm))
+        const startsWithMatches = allLocations.filter(loc =>
+            loc.name && loc.name.toLowerCase().startsWith(lowerCaseSearchTerm)
         );
+
+        const includesMatches = allLocations.filter(loc =>
+            loc.name &&
+            loc.name.toLowerCase().includes(lowerCaseSearchTerm) &&
+            !loc.name.toLowerCase().startsWith(lowerCaseSearchTerm)
+        );
+
+        const matchingLocations = [...startsWithMatches, ...includesMatches];
 
         setSearchResults({ cities: matchingCities, locations: matchingLocations });
     }, [searchTerm, allLocations, allCities]);

@@ -51,10 +51,8 @@ const MobileView = (props) => {
         const lng = details?.geometry?.location?.lng();
 
         if (lat && lng) {
-            // Added the missing "/" after "/dir//"
             finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
         } else {
-            // Added the missing "/" after "/dir//"
             finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
         }
 
