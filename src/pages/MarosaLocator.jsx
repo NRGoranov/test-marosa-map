@@ -161,9 +161,9 @@ function MarosaLocator({ initialSearchState = false }) {
         if (selectedPlace?.placeId === place.placeId) {
             closeInfoWindow();
         } else {
-            if (map) { // Good practice to check if map is available
+            if (map) {
                 map.panTo(place.position);
-                map.setZoom(14); // <<< --- ADD THIS LINE
+                map.setZoom(14);
             }
             setSelectedPlace(place);
             setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
