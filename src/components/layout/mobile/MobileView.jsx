@@ -100,7 +100,7 @@ const MobileView = (props) => {
                 defaultSnap={({ snapPoints }) => snapPoints[0]}
                 header={
                     <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
-                        {selectedPlace ? selectedPlace.name : 'Информация за обект'}
+                        {selectedPlace ? selectedPlace.name : ''}
                     </div>
                 }
             >
