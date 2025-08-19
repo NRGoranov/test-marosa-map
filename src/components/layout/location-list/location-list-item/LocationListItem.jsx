@@ -12,18 +12,15 @@ const LocationListItem = React.forwardRef(({
     onClick,
     onMouseOver,
     onMouseOut,
-    onShareClick, //
+    onShareClick,
     isSelected,
     isHovered,
     isMobileView
 }, ref) => {
-    //const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
     const status = details ? checkIfOpen(details) : { statusText: "Зарежда се...", detailText: "", color: "text-gray-500" };
     const photoUrl = location.imageUrl
         ? location.imageUrl
         : (details?.photos ? details.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png');
-    //const mapsUrl = location.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(details?.name)}`;
     const locationName = details?.name || location.name;
     const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName)}`;
 
