@@ -48,7 +48,7 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
         return null;
     }
 
-    const imageUrl = place.photos?.[0]?.getUrl({ maxWidth: 112, maxHeight: 112 }) || place.icon;
+    const imageUrl = place.photos?.[0]?.getUrl({ maxWidth: 400, maxHeight: 400 }) || place.icon;
 
     const encodedUrl = encodeURIComponent(googleMapsUrl);
 
@@ -67,8 +67,8 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
         if (option.isLink) {
             return (
                 <a href={option.href} className={buttonClasses} target="_blank" rel="noopener noreferrer">
-                    <div className="text-green-800">{option.icon}</div>
-                    <span>{option.name}</span>
+                    <div className="text-green-800 text-[13px]">{option.icon}</div>
+                    <span className="font-medium text-gray-800 text-[14px]">{option.name}</span>
                 </a>
             );
         }
@@ -76,7 +76,7 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
         return (
             <button onClick={option.action} className={buttonClasses}>
                 <div className="text-green-800">{option.icon}</div>
-                <span>{isCopied && option.action === handleCopy ? 'Copied!' : option.name}</span>
+                <span className="font-medium text-gray-800 text-[14px]">{isCopied && option.action === handleCopy ? 'Copied!' : option.name}</span>
             </button>
         );
     };
