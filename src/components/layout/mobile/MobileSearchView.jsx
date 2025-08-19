@@ -111,9 +111,9 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
         const lng = details?.geometry?.location?.lng();
 
         if (lat && lng) {
-            finalMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
         } else {
-            finalMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(combinedData.name)}`;
+            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
         }
 
         const comprehensiveLocationData = {
