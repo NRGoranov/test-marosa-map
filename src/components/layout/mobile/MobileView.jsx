@@ -103,8 +103,6 @@ const MobileView = (props) => {
                         {selectedPlace ? selectedPlace.name : 'Информация за обект'}
                     </div>
                 }
-
-                onDismiss={onCloseInfoWindow}
             >
                 <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
                     <LocationList
