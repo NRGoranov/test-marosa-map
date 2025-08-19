@@ -31,7 +31,7 @@ const MobileView = (props) => {
         }
     }, [selectedPlace]);
 
-    const snapPoints = ({ minHeight, maxHeight }) => [
+    const snapPoints = ({ maxHeight }) => [
         63,
         maxHeight * 0.55,
         maxHeight - 110,
