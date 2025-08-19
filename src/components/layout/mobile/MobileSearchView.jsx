@@ -6,12 +6,14 @@ import SearchResults from './SearchResults';
 import Map from '../../map/Map';
 import LocationList from '../location-list/LocationList';
 import SearchIcon from '../../../assets/icons/SearchIcon';
+import MobileShareModal from './MobileShareModal';
 
 const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
     const sheetRef = useRef();
     const itemRefs = useRef({});
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState({ cities: [], locations: [] });
+    const [locationToShare, setLocationToShare] = useState(null);
 
     const {
         isLoaded,
@@ -97,6 +99,31 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
         setSearchTerm('');
     };
 
+    const handleShareClick = (location, details) => {
+        const combinedData = {
+            ...location,
+            ...details,
+            name: details?.name || location.name
+        };
+
+        let finalMapsUrl = '';
+        const lat = details?.geometry?.location?.lat();
+        const lng = details?.geometry?.location?.lng();
+
+        if (lat && lng) {
+            finalMapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+        } else {
+            finalMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(combinedData.name)}`;
+        }
+
+        const comprehensiveLocationData = {
+            ...combinedData,
+            mapsUrl: finalMapsUrl,
+        };
+
+        setLocationToShare(comprehensiveLocationData);
+    }
+
     const snapPoints = ({ maxHeight }) => [
         63,
         maxHeight * 0.55,
@@ -162,6 +189,7 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                                 {...props}
                                 onListItemClick={onMarkerClick}
                                 onListItemHover={onListItemHover}
+                                onShareClick={handleShareClick}
                                 itemRefs={itemRefs}
                                 isMobileView={true}
                             />
@@ -169,6 +197,12 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                     </BottomSheet>
                 )}
             </div>
+
+            <MobileShareModal
+                isOpen={!!locationToShare}
+                onClose={() => setLocationToShare(null)}
+                place={locationToShare}
+            />
         </div>
     );
 };

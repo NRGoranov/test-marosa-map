@@ -12,9 +12,6 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
     }, [isOpen]);
 
     const googleMapsUrl = place?.mapsUrl || '';
-    //const googleMapsUrl = place
-    //    ? place.mapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}`
-    //    : '';
 
     const handleCopy = useCallback(() => {
         console.log('Attempting to copy URL:', googleMapsUrl);
@@ -38,7 +35,6 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
         return null;
     }
 
-    //const encodedUrl = place ? encodeURIComponent(googleMapsUrl) : '';
     const encodedUrl = encodeURIComponent(googleMapsUrl);
 
     const shareOptions = [

@@ -20,7 +20,6 @@ const MobileView = (props) => {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [locationToShare, setLocationToShare] = useState(null);
-    //const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const sheetRef = useRef();
 
     useEffect(() => {
