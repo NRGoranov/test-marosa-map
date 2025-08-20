@@ -108,7 +108,10 @@ const MobileShareModal = ({ isOpen, onClose, place }) => {
                     <div>
                         <h3 className="font-bold text-base text-[#00562A]">{place.name}</h3>
 
-                        <StarRating rating={place.rating} starSize="text-sm" />
+                        <div className="flex items-center gap-1">
+                            <span className="font-medium text-xs text-[#8F8F8F] leading-[15px]">{place.rating?.toFixed(1)}</span>
+                            <StarRating rating={place.rating} starSize="text-sm" />
+                        </div>
 
                         <p className="text-sm font-medium mt-1">
                             <span className={openingHoursInfo.color}>{openingHoursInfo.statusText}</span>
