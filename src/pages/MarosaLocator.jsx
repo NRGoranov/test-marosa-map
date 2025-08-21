@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useJsApiLoader } from '@react-google-maps/api';
+//import { useJsApiLoader } from '@react-google-maps/api';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from 'react-router-dom';
 
@@ -10,17 +10,14 @@ import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 import MobileView from '../components/layout/mobile/MobileView';
 
 import StyleInjector from '../components/ui/StyleInjector';
-import { useGooglePlaces } from '../hooks/useGooglePlaces';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-
-const googleMapsApiKey = "AIzaSyB3HnHvGA4yPr85twsipz7YAT6EmZAo1wk";
 
 const libraries = ['places'];
 
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: googleMapsApiKey,
+        //googleMapsApiKey: googleMapsApiKey,
         libraries,
     });
 
@@ -33,7 +30,7 @@ function MarosaLocator({ initialSearchState = false }) {
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
     const [currentUserPosition, setCurrentUserPosition] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
-    const { allPlaceDetails, isInitialLoading } = useGooglePlaces(map, isLoaded, locations);
+    //const { allPlaceDetails, isInitialLoading } = useGooglePlaces(map, isLoaded, locations);
     const [visibleLocations, setVisibleLocations] = useState([]);
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [isSearching, setIsSearching] = useState(initialSearchState);
@@ -153,20 +150,20 @@ function MarosaLocator({ initialSearchState = false }) {
         closeInfoWindow();
     }, [closeInfoWindow]);
 
-    const handleMarkerClick = useCallback((place) => {
-        markerClickRef.current = true;
-        if (selectedPlace?.placeId === place.placeId) {
-            setSelectedPlace(null);
-            setPlaceDetails(null);
-        } else {
-            if (map) {
-                map.panTo(place.position);
-                map.setZoom(14);
-            }
-            setSelectedPlace(place);
-            setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
-        }
-    }, [map, selectedPlace, allPlaceDetails]);
+    //const handleMarkerClick = useCallback((place) => {
+    //    markerClickRef.current = true;
+    //    if (selectedPlace?.placeId === place.placeId) {
+    //        setSelectedPlace(null);
+    //        setPlaceDetails(null);
+    //    } else {
+    //        if (map) {
+    //            map.panTo(place.position);
+    //            map.setZoom(14);
+    //        }
+    //        setSelectedPlace(place);
+    //        setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
+    //    }
+    //}, [map, selectedPlace, allPlaceDetails]);
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
