@@ -36,9 +36,11 @@ function MarosaLocator({ initialSearchState = false }) {
         const fetchData = async () => {
             setIsLoadingData(true);
             try {
-                const locationsResponse = await Promise.all([
-                    fetch('https://api.marosamap.eu/api/stores'),
-                ]);
+                const locationsResponse = await fetch('https://api.marosamap.eu/api/stores');
+
+                if (!locationsResponse.ok) {
+                    throw new Error('Network response was not ok');
+                }
 
                 const locationsData = await locationsResponse.json();
 
@@ -50,7 +52,7 @@ function MarosaLocator({ initialSearchState = false }) {
                 setLocations(transformedLocationsData);
 
                 console.log("Successfully fetched data from custom API.");
-                console.log(locations);
+                console.log("Data to be set in state:", transformedLocationsData);
             } catch (error) {
                 console.error("Error fetching data from API: ", error);
             } finally {
@@ -178,7 +180,7 @@ function MarosaLocator({ initialSearchState = false }) {
         }
     }, [map, selectedPlace]);
 
-    
+
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
