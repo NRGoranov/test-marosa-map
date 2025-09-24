@@ -20,8 +20,6 @@ const Map = ({
     onLoad,
     locations,
     selectedPlace,
-    placeDetails,
-    allPlaceDetails,
     onMarkerClick,
     onCloseInfoWindow,
     showInfoWindow,
@@ -95,21 +93,22 @@ const Map = ({
                 />
 
                 {locations && locations.map((loc) => {
-                    const isSelected = selectedPlace?.placeId === loc.placeId;
+                    const isSelected = selectedPlace?.id === loc.id;
                     const isHovered = hoveredPlaceId === loc.placeId;
 
-                    let detailsForIcon = null;
+                    {/*let detailsForIcon = null;
                     if (isSelected) {
                         detailsForIcon = placeDetails;
                     } else if (isHovered) {
-                        detailsForIcon = allPlaceDetails[loc.placeId];
+                        detailsForIcon = locations.find(location => location.placeId === hoveredPlaceId);
                     }
+                    */}
 
-                    const { url, size } = getMarkerIcons(isSelected, isHovered, detailsForIcon);
+                    const { url, size } = getMarkerIcons(isSelected, isHovered, loc);
 
                     return (
                         <Marker
-                            key={loc.placeId}
+                            key={loc.id}
                             position={loc.position}
                             onClick={() => onMarkerClick(loc)}
                             icon={{
@@ -117,7 +116,7 @@ const Map = ({
                                 scaledSize: size,
                                 anchor: new window.google.maps.Point(size.width / 2, size.height),
                             }}
-                            title={loc.name}
+                            title={loc.displayName.text}
                             zIndex={isSelected || isHovered ? 10 : 1}
                             onMouseOver={() => onMarkerHover(loc.placeId)}
                             onMouseOut={() => onMarkerHover(null)}
@@ -144,7 +143,7 @@ const Map = ({
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
-                        <CustomInfoWindowCard placeDetails={placeDetails} location={selectedPlace} onClose={onCloseInfoWindow} />
+                        <CustomInfoWindowCard location={selectedPlace} onClose={onCloseInfoWindow} />
                     </InfoWindow>
                 )}
             </GoogleMap>

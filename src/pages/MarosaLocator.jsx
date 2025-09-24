@@ -9,13 +9,10 @@ import MobileView from '../components/layout/mobile/MobileView';
 import StyleInjector from '../components/ui/StyleInjector';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
-//const libraries = ['places'];
-
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-        //libraries,
     });
 
     const navigate = useNavigate();
@@ -82,13 +79,17 @@ function MarosaLocator({ initialSearchState = false }) {
         setIsSearching(initialSearchState);
     }, [initialSearchState]);
 
+
+
+    {/*
     const handleNavigateToBrochure = () => {
         navigate('/brochure');
     };
+    */}
 
 
 
-    // TO CHANGE
+    // TO CHANGE WHEN WE MAKE CITIES IN DATABASE
     const handleCitySelect = useCallback(async (cityName) => {
         if (!map) return;
 
@@ -109,7 +110,6 @@ function MarosaLocator({ initialSearchState = false }) {
             console.error("Error fetching city details: ", error);
         }
     }, [map]);
-    //
 
 
 
@@ -141,7 +141,7 @@ function MarosaLocator({ initialSearchState = false }) {
 
 
 
-    // TO REMOVE?
+    {/*
     const handleHomeMarkerClick = (place) => {
         if (map) {
             map.panTo(place.position);
@@ -150,8 +150,7 @@ function MarosaLocator({ initialSearchState = false }) {
 
         setIsSearching(true);
     };
-    //
-
+    */}
 
 
     const handleMapClick = useCallback(() => {
