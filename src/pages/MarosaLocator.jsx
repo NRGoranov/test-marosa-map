@@ -40,10 +40,6 @@ function MarosaLocator({ initialSearchState = false }) {
                     fetch('https://api.marosamap.eu/api/stores'),
                 ]);
 
-                if (!locationsResponse.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
                 const locationsData = await locationsResponse.json();
 
                 const transformedLocationsData = locationsData.map(location => ({
