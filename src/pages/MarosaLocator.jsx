@@ -14,7 +14,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        googleMapsApiKey: "AIzaSyA5bYUMc0zNGFbBUuuCjt3ZS7uo7pSkM8I",
         //libraries,
     });
 
