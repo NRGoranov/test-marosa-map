@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-//import { useJsApiLoader } from '@react-google-maps/api';
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { useJsApiLoader } from '@react-google-maps/api';
 import { useNavigate } from 'react-router-dom';
-
-import { db } from '../firebase';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileSearchView from '../components/layout/mobile/MobileSearchView';
@@ -12,13 +9,13 @@ import MobileView from '../components/layout/mobile/MobileView';
 import StyleInjector from '../components/ui/StyleInjector';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
-const libraries = ['places'];
+//const libraries = ['places'];
 
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        //googleMapsApiKey: googleMapsApiKey,
-        libraries,
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        //libraries,
     });
 
     const navigate = useNavigate();
@@ -30,7 +27,6 @@ function MarosaLocator({ initialSearchState = false }) {
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
     const [currentUserPosition, setCurrentUserPosition] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
-    //const { allPlaceDetails, isInitialLoading } = useGooglePlaces(map, isLoaded, locations);
     const [visibleLocations, setVisibleLocations] = useState([]);
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [isSearching, setIsSearching] = useState(initialSearchState);
@@ -40,21 +36,27 @@ function MarosaLocator({ initialSearchState = false }) {
         const fetchData = async () => {
             setIsLoadingData(true);
             try {
-                const locationsQuery = getDocs(collection(db, "locations"));
-                const citiesQuery = getDocs(collection(db, "cities"));
+                const locationsResponse = await Promise.all([
+                    fetch('https://api.marosamap.eu/api/stores'),
+                ]);
 
-                const [locationsSnapshot, citiesSnapshot] = await Promise.all([locationsQuery, citiesQuery]);
+                if (!locationsResponse.ok) {
+                    throw new Error('Network response was not ok');
+                }
 
-                const locationsData = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setLocations(locationsData);
+                const locationsData = await locationsResponse.json();
 
-                const citiesData = citiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setAllCities(citiesData);
+                const transformedLocationsData = locationsData.map(location => ({
+                    ...location,
+                    position: { lat: location.lat, lng: location.lng }
+                }));
 
-                console.log("Successfully fetched locations and cities.");
+                setLocations(transformedLocationsData);
 
+                console.log("Successfully fetched data from custom API.");
+                console.log(locations);
             } catch (error) {
-                console.error("Error fetching data: ", error);
+                console.error("Error fetching data from API: ", error);
             } finally {
                 setIsLoadingData(false);
             }
@@ -86,6 +88,9 @@ function MarosaLocator({ initialSearchState = false }) {
         navigate('/brochure');
     };
 
+
+
+    // TO CHANGE
     const handleCitySelect = useCallback(async (cityName) => {
         if (!map) return;
 
@@ -106,6 +111,9 @@ function MarosaLocator({ initialSearchState = false }) {
             console.error("Error fetching city details: ", error);
         }
     }, [map]);
+    //
+
+
 
     const handleMapIdle = useCallback(() => {
         if (!map || locations.length === 0) return;
@@ -133,6 +141,9 @@ function MarosaLocator({ initialSearchState = false }) {
         navigate('/');
     };
 
+
+
+    // TO REMOVE?
     const handleHomeMarkerClick = (place) => {
         if (map) {
             map.panTo(place.position);
@@ -141,6 +152,9 @@ function MarosaLocator({ initialSearchState = false }) {
 
         setIsSearching(true);
     };
+    //
+
+
 
     const handleMapClick = useCallback(() => {
         if (markerClickRef.current) {
@@ -150,20 +164,25 @@ function MarosaLocator({ initialSearchState = false }) {
         closeInfoWindow();
     }, [closeInfoWindow]);
 
-    //const handleMarkerClick = useCallback((place) => {
-    //    markerClickRef.current = true;
-    //    if (selectedPlace?.placeId === place.placeId) {
-    //        setSelectedPlace(null);
-    //        setPlaceDetails(null);
-    //    } else {
-    //        if (map) {
-    //            map.panTo(place.position);
-    //            map.setZoom(14);
-    //        }
-    //        setSelectedPlace(place);
-    //        setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
-    //    }
-    //}, [map, selectedPlace, allPlaceDetails]);
+
+
+    const handleMarkerClick = useCallback((place) => {
+        markerClickRef.current = true;
+
+        if (selectedPlace?.id === place.id) {
+            setSelectedPlace(null);
+            setPlaceDetails(null);
+        } else {
+            if (map) {
+                map.panTo(place.position);
+                map.setZoom(14);
+            }
+            setSelectedPlace(place);
+            setPlaceDetails(place);
+        }
+    }, [map, selectedPlace]);
+
+    
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
@@ -173,10 +192,9 @@ function MarosaLocator({ initialSearchState = false }) {
         locations: visibleLocations,
         allLocations: locations,
         allCities: allCities,
-        isInitialLoading: isInitialLoading || isLoadingData,
+        isInitialLoading: isLoadingData,
         selectedPlace,
         placeDetails,
-        allPlaceDetails,
         onMarkerClick: handleMarkerClick,
         onCloseInfoWindow: closeInfoWindow,
         onMapClick: handleMapClick,
