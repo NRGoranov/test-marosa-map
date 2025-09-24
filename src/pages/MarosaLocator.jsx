@@ -14,7 +14,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: "AIzaSyA5bYUMc0zNGFbBUuuCjt3ZS7uo7pSkM8I",
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
         //libraries,
     });
 
@@ -51,8 +51,8 @@ function MarosaLocator({ initialSearchState = false }) {
 
                 setLocations(transformedLocationsData);
 
-                console.log("Successfully fetched data from custom API.");
-                console.log("Data to be set in state:", transformedLocationsData);
+                console.log("Successfully fetched data.");
+                console.log(transformedLocationsData);
             } catch (error) {
                 console.error("Error fetching data from API: ", error);
             } finally {
