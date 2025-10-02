@@ -9,6 +9,8 @@ import MobileView from '../components/layout/mobile/MobileView';
 import StyleInjector from '../components/ui/StyleInjector';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
+import citiesData from '../data/filtered_cities_minified.json';
+
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -30,7 +32,7 @@ function MarosaLocator({ initialSearchState = false }) {
     const markerClickRef = useRef(false);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const loadData = async () => {
             setIsLoadingData(true);
             try {
                 const locationsResponse = await fetch('https://api.marosamap.eu/api/stores');
@@ -48,7 +50,30 @@ function MarosaLocator({ initialSearchState = false }) {
 
                 setLocations(transformedLocationsData);
 
+                const uniqueCities = citiesData.reduce((accumulator, current) => {
+                    if (!accumulator.find(item => item.city === current.city)) {
+                        accumulator.push(current);
+                    }
+                    return accumulator;
+                }, []);
+
+                const transformedCitiesData = uniqueCities.map(city => {
+                    const bulgarianName = (city.alt_names && city.alt_names.length > 0) 
+                    ? city.alt_names[city.alt_names.length - 1]
+                    : city.city;
+
+                    return {
+                        englishName: city.city,
+                        bulgarianName: bulgarianName,
+                        lat: city.lat,
+                        lng: city.lng,
+                    };
+                });
+
+                setAllCities(transformedCitiesData);
+
                 console.log("Successfully fetched data.");
+
                 console.log(transformedLocationsData);
             } catch (error) {
                 console.error("Error fetching data from API: ", error);
@@ -57,7 +82,7 @@ function MarosaLocator({ initialSearchState = false }) {
             }
         };
 
-        fetchData();
+        loadData();
     }, []);
 
     useEffect(() => {
@@ -79,39 +104,22 @@ function MarosaLocator({ initialSearchState = false }) {
         setIsSearching(initialSearchState);
     }, [initialSearchState]);
 
-
-
-    {/*
-    const handleNavigateToBrochure = () => {
-        navigate('/brochure');
-    };
-    */}
-
-
-
-    // TO CHANGE WHEN WE MAKE CITIES IN DATABASE
-    const handleCitySelect = useCallback(async (cityName) => {
+    const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
 
         console.log(`Searching for city: ${cityName}`);
-        const cityDocRef = doc(db, "cities", cityName);
-        try {
-            const cityDoc = await getDoc(cityDocRef);
-            if (cityDoc.exists()) {
-                const cityData = cityDoc.data();
-                const { position } = cityData;
-                map.panTo(position);
-                map.setZoom(11);
-                console.log(`Panned to ${cityName} at`, position);
-            } else {
-                console.error(`City not found in database: ${cityName}`);
-            }
-        } catch (error) {
-            console.error("Error fetching city details: ", error);
+
+        const cityData = allCities.find(city => city.city === cityName);
+
+        if (cityData) {
+            const position = { lat: cityData.lat, lng: cityData.lng };
+            map.panTo(position);
+            map.setZoom(11);
+            console.log(`Panned to ${cityName} at`, position);
+        } else {
+            console.error(`City not found in local data: ${cityName}`);
         }
-    }, [map]);
-
-
+    }, [map, allCities]);
 
     const handleMapIdle = useCallback(() => {
         if (!map || locations.length === 0) return;
@@ -139,20 +147,6 @@ function MarosaLocator({ initialSearchState = false }) {
         navigate('/');
     };
 
-
-
-    {/*
-    const handleHomeMarkerClick = (place) => {
-        if (map) {
-            map.panTo(place.position);
-            map.setZoom(14);
-        }
-
-        setIsSearching(true);
-    };
-    */}
-
-
     const handleMapClick = useCallback(() => {
         if (markerClickRef.current) {
             markerClickRef.current = false;
@@ -160,8 +154,6 @@ function MarosaLocator({ initialSearchState = false }) {
         }
         closeInfoWindow();
     }, [closeInfoWindow]);
-
-
 
     const handleMarkerClick = useCallback((place) => {
         markerClickRef.current = true;
@@ -178,8 +170,6 @@ function MarosaLocator({ initialSearchState = false }) {
             setPlaceDetails(place);
         }
     }, [map, selectedPlace]);
-
-
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 

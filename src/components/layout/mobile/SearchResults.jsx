@@ -16,13 +16,17 @@ const SearchResults = ({ results, onCityClick, onLocationClick, onExitSearch }) 
                     <div className="p-4">
                         <h3 className="text-lg font-bold text-gray-800 mb-2">Градове</h3>
                         <ul>
-                            {cities.map(city => (
-                                <li key={city} onClick={() => onCityClick(city)} className="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer group">
+                            {cities.map(cityObj => (
+                                <li
+                                    key={cityObj.englishName}
+                                    onClick={() => onCityClick(cityObj.bulgarianName)}
+                                    className="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer group"
+                                >
                                     <div className="flex items-center">
-                                        <CityIcon className="w-5 h-5 text-gray-400 mr-3" />
-                                        <span className="text-gray-700 group-hover:text-green-600">{city}</span>
+                                        <CityIcon className="w-5 h-5 text-gray-400 mr-3 mt-1 flex-shrink-0" />
+                                        <span className="text-gray-700 group-hover:text-green-600">{cityObj.bulgarianName}</span>
                                     </div>
-                                    <TopLeftArrowIcon className="w-5 h-5 text-gray-400 transform -rotate-45" />
+                                    <TopLeftArrowIcon className="w-5 h-5 text-gray-400 transform -rotate-45 mt-1 flex-shrink-0" />
                                 </li>
                             ))}
                         </ul>
@@ -34,12 +38,16 @@ const SearchResults = ({ results, onCityClick, onLocationClick, onExitSearch }) 
                         <h3 className="text-lg font-bold text-gray-800 mb-2">Обекти</h3>
                         <ul>
                             {locations.map(loc => (
-                                <li key={loc.placeId} onClick={() => onLocationClick(loc)} className="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer group">
+                                <li
+                                    key={loc.id}
+                                    onClick={() => onLocationClick(loc)}
+                                    className="flex items-center justify-between py-3 border-b border-gray-100 cursor-pointer group"
+                                >
                                     <div className="flex items-center">
-                                        <LocationPinIcon className="w-5 h-5 text-gray-400 mr-3" />
-                                        <span className="text-gray-700 group-hover:text-green-600">{loc.name}</span>
+                                        <LocationPinIcon className="w-5 h-5 text-gray-400 mr-3 mt-1 flex-shrink-0" />
+                                        <span className="text-gray-700 group-hover:text-green-600">{loc.displayName.text}</span>
                                     </div>
-                                    <TopLeftArrowIcon className="w-5 h-5 text-gray-400 transform -rotate-45" />
+                                    <TopLeftArrowIcon className="w-5 h-5 text-gray-400 transform -rotate-45 mt-1 flex-shrink-0" />
                                 </li>
                             ))}
                         </ul>

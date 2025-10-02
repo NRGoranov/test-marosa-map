@@ -41,7 +41,7 @@ const MobileView = (props) => {
         const combinedData = {
             ...location,
             ...details,
-            name: details?.name || location.name
+            name: location.displayName.text
         };
 
         let finalMapsUrl = '';
@@ -100,7 +100,7 @@ const MobileView = (props) => {
                 defaultSnap={({ snapPoints }) => snapPoints[0]}
                 header={
                     <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
-                        {selectedPlace ? selectedPlace.name : ''}
+                        {selectedPlace ? selectedPlace.displayName.text : ''}
                     </div>
                 }
             >

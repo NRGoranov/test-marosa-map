@@ -32,20 +32,23 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
             return;
         }
 
-        const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase();
+        const isCyrillic = /[а-яА-Я]/.test(searchTerm);
 
-        const matchingCities = allCities
-            .filter(city => city.name.toLowerCase().includes(lowerCaseSearchTerm))
-            .map(city => city.name);
+        const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US');
+
+        const matchingCities = allCities.filter(city => {
+            const nameToSearch = isCyrillic ? city.bulgarianName : city.englishName;
+            return nameToSearch.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US').includes(lowerCaseSearchTerm);
+        });
 
         const startsWithMatches = allLocations.filter(loc =>
-            loc.name && loc.name.toLowerCase().startsWith(lowerCaseSearchTerm)
+            loc.displayName?.text && loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
         );
 
         const includesMatches = allLocations.filter(loc =>
-            loc.name &&
-            loc.name.toLowerCase().includes(lowerCaseSearchTerm) &&
-            !loc.name.toLowerCase().startsWith(lowerCaseSearchTerm)
+            loc.displayName?.text &&
+            loc.displayName.text.toLocaleLowerCase('bg-BG').includes(lowerCaseSearchTerm) &&
+            !loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
         );
 
         const matchingLocations = [...startsWithMatches, ...includesMatches];
