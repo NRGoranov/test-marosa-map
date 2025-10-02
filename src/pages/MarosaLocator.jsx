@@ -109,7 +109,7 @@ function MarosaLocator({ initialSearchState = false }) {
 
         console.log(`Searching for city: ${cityName}`);
 
-        const cityData = allCities.find(city => city.city === cityName);
+        const cityData = allCities.find(city => city.bulgarianName === cityName);
 
         if (cityData) {
             const position = { lat: cityData.lat, lng: cityData.lng };
