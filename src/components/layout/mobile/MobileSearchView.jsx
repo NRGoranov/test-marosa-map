@@ -5,15 +5,15 @@ import 'react-spring-bottom-sheet/dist/style.css';
 import SearchResults from './SearchResults';
 import Map from '../../map/Map';
 import LocationList from '../location-list/LocationList';
-import MapButton from '../../ui/MapButton';
 import SearchIcon from '../../../assets/icons/SearchIcon';
+import MobileShareModal from './MobileShareModal';
 
 const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
     const sheetRef = useRef();
     const itemRefs = useRef({});
-    const [isSheetAtTop, setIsSheetAtTop] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState({ cities: [], locations: [] });
+    const [locationToShare, setLocationToShare] = useState(null);
 
     const {
         isLoaded,
@@ -32,18 +32,39 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
             return;
         }
 
-        const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase();
+        const isCyrillic = /[а-яА-Я]/.test(searchTerm);
 
-        const matchingCities = allCities
-            .filter(city => city.name.toLowerCase().startsWith(lowerCaseSearchTerm))
-            .map(city => city.name);
+        const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US');
 
-        const matchingLocations = allLocations.filter(loc =>
-            (loc.objectType && loc.objectType.toLowerCase().startsWith(lowerCaseSearchTerm))
+        const matchingCities = allCities.filter(city => {
+            const nameToSearch = isCyrillic ? city.bulgarianName : city.englishName;
+            return nameToSearch.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US').includes(lowerCaseSearchTerm);
+        });
+
+        const startsWithMatches = allLocations.filter(loc =>
+            loc.displayName?.text && loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
         );
+
+        const includesMatches = allLocations.filter(loc =>
+            loc.displayName?.text &&
+            loc.displayName.text.toLocaleLowerCase('bg-BG').includes(lowerCaseSearchTerm) &&
+            !loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
+        );
+
+        const matchingLocations = [...startsWithMatches, ...includesMatches];
 
         setSearchResults({ cities: matchingCities, locations: matchingLocations });
     }, [searchTerm, allLocations, allCities]);
+
+    useEffect(() => {
+        if (searchTerm) {
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [searchTerm]);
 
     useEffect(() => {
         if (!sheetRef.current) return;
@@ -73,7 +94,6 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
         if (onCitySelect) {
             onCitySelect(city);
         }
-
         setSearchTerm('');
     };
 
@@ -82,35 +102,36 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
         setSearchTerm('');
     };
 
-    const snapPoints = ({ minHeight, maxHeight }) => [
+    const handleShareClick = (location, details) => {
+        const combinedData = {
+            ...location,
+            ...details,
+            name: details?.name || location.name
+        };
+
+        let finalMapsUrl = '';
+        const lat = details?.geometry?.location?.lat();
+        const lng = details?.geometry?.location?.lng();
+
+        if (lat && lng) {
+            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
+        } else {
+            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
+        }
+
+        const comprehensiveLocationData = {
+            ...combinedData,
+            mapsUrl: finalMapsUrl,
+        };
+
+        setLocationToShare(comprehensiveLocationData);
+    }
+
+    const snapPoints = ({ maxHeight }) => [
         63,
         maxHeight * 0.55,
         maxHeight - 110,
     ];
-
-    const handleSpringStart = (event) => {
-        if (event.type === 'DRAG') {
-            setIsSheetAtTop(false);
-        }
-    };
-
-    const handleSpringEnd = () => {
-        if (!sheetRef.current) return;
-
-        const currentHeight = sheetRef.current.height;
-        const isAtTop = currentHeight >= (window.innerHeight - 130);
-        setIsSheetAtTop(isAtTop);
-
-        if (selectedPlace && itemRefs.current[selectedPlace.placeId]) {
-            const isAtHalfway = Math.abs(currentHeight - (window.innerHeight * 0.55)) < 10;
-            if (isAtHalfway) {
-                itemRefs.current[selectedPlace.placeId].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                });
-            }
-        }
-    };
 
     return (
         <div className="flex flex-col h-screen w-screen bg-white">
@@ -151,34 +172,40 @@ const MobileSearchView = ({ onExitSearch, onCitySelect, ...props }) => {
                     {isLoaded && <Map {...props} locations={allLocations} />}
                 </div>
 
-                {!searchTerm && (<BottomSheet
-                    open
-                    blocking={false}
-                    ref={sheetRef}
-                    snapPoints={snapPoints}
-                    defaultSnap={({ snapPoints }) => snapPoints[0]}
-                    onSpringStart={handleSpringStart}
-                    onSpringEnd={handleSpringEnd}
-                    header={
-                        <div className="flex flex-col items-center justify-center">
-                            <h2 className="text-lg font-bold text-gray-800 pt-2">
-                                {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
-                            </h2>
+                {!searchTerm && (
+                    <BottomSheet
+                        open
+                        blocking={false}
+                        ref={sheetRef}
+                        snapPoints={snapPoints}
+                        defaultSnap={({ snapPoints }) => snapPoints[0]}
+                        header={
+                            <div className="flex flex-col items-center justify-center">
+                                <h2 className="text-lg font-bold text-gray-800 pt-2">
+                                    {locations.length} {locations.length === 1 ? 'намерен обект' : 'намерени обекта'}
+                                </h2>
+                            </div>
+                        }
+                    >
+                        <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
+                            <LocationList
+                                {...props}
+                                onListItemClick={onMarkerClick}
+                                onListItemHover={onListItemHover}
+                                onShareClick={handleShareClick}
+                                itemRefs={itemRefs}
+                                isMobileView={true}
+                            />
                         </div>
-                    }
-                >
-                    <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
-                        <LocationList
-                            {...props}
-                            onListItemClick={onMarkerClick}
-                            onListItemHover={onListItemHover}
-                            itemRefs={itemRefs}
-                            isMobileView={true}
-                        />
-                    </div>
-                </BottomSheet>
+                    </BottomSheet>
                 )}
             </div>
+
+            <MobileShareModal
+                isOpen={!!locationToShare}
+                onClose={() => setLocationToShare(null)}
+                place={locationToShare}
+            />
         </div>
     );
 };

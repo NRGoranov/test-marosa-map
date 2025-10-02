@@ -10,10 +10,10 @@ const LocationList = (props) => {
                     ref={props.itemRefs ? (el => (props.itemRefs.current[location.placeId] = el)) : null}
                     key={location.placeId}
                     location={location}
-                    details={props.allPlaceDetails[location.placeId]}
                     onClick={() => props.onListItemClick(location)}
                     onMouseOver={() => props.onListItemHover(location.placeId)}
                     onMouseOut={() => props.onListItemHover(null)}
+                    onShareClick={props.onShareClick} //
                     isHovered={props.hoveredPlaceId === location.placeId}
                     isSelected={props.selectedPlaceId === location.placeId}
                     isMobileView={props.isMobileView}

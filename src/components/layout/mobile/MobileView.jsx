@@ -6,6 +6,7 @@ import Map from '../../map/Map';
 import MobileViewHeader from '../mobile/MobileViewHeader';
 import SlideDownMenu from '../../ui/SlideDownMenu';
 import LocationList from '../location-list/LocationList';
+import MobileShareModal from './MobileShareModal';
 
 const MobileView = (props) => {
     const {
@@ -18,6 +19,7 @@ const MobileView = (props) => {
     } = props;
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [locationToShare, setLocationToShare] = useState(null);
     const sheetRef = useRef();
 
     useEffect(() => {
@@ -29,11 +31,37 @@ const MobileView = (props) => {
         }
     }, [selectedPlace]);
 
-    const snapPoints = ({ minHeight, maxHeight }) => [
+    const snapPoints = ({ maxHeight }) => [
         63,
         maxHeight * 0.55,
         maxHeight - 110,
     ];
+
+    const handleShareClick = (location, details) => {
+        const combinedData = {
+            ...location,
+            ...details,
+            name: location.displayName.text
+        };
+
+        let finalMapsUrl = '';
+
+        const lat = details?.geometry?.location?.lat();
+        const lng = details?.geometry?.location?.lng();
+
+        if (lat && lng) {
+            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
+        } else {
+            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
+        }
+
+        const comprehensiveLocationData = {
+            ...combinedData,
+            mapsUrl: finalMapsUrl
+        };
+
+        setLocationToShare(comprehensiveLocationData);
+    };
 
     return (
         <div className="h-screen w-screen relative">
@@ -72,21 +100,26 @@ const MobileView = (props) => {
                 defaultSnap={({ snapPoints }) => snapPoints[0]}
                 header={
                     <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
-                        {selectedPlace ? selectedPlace.name : 'Информация за обект'}
+                        {selectedPlace ? selectedPlace.displayName.text : ''}
                     </div>
                 }
-
-                onDismiss={onCloseInfoWindow}
             >
                 <div data-rsbs-scroll="true" className="flex-grow overflow-y-auto px-4 pb-4">
                     <LocationList
                         {...props}
                         locations={selectedPlace ? [selectedPlace] : []}
                         onListItemClick={onMarkerClick}
+                        onShareClick={handleShareClick}
                         isMobileView={true}
                     />
                 </div>
             </BottomSheet>
+
+            <MobileShareModal
+                isOpen={!!locationToShare}
+                onClose={() => setLocationToShare(null)}
+                place={locationToShare}
+            />
         </div>
     );
 };

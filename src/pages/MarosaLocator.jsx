@@ -1,27 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from 'react-router-dom';
-
-import { db } from '../firebase';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 import MobileView from '../components/layout/mobile/MobileView';
 
 import StyleInjector from '../components/ui/StyleInjector';
-import { useGooglePlaces } from '../hooks/useGooglePlaces';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
-const googleMapsApiKey = "AIzaSyB3HnHvGA4yPr85twsipz7YAT6EmZAo1wk";
-
-const libraries = ['places'];
+import citiesData from '../data/filtered_cities_minified.json';
 
 function MarosaLocator({ initialSearchState = false }) {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: googleMapsApiKey,
-        libraries,
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     });
 
     const navigate = useNavigate();
@@ -33,37 +26,63 @@ function MarosaLocator({ initialSearchState = false }) {
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
     const [currentUserPosition, setCurrentUserPosition] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
-    const { allPlaceDetails, isInitialLoading } = useGooglePlaces(map, isLoaded, locations);
     const [visibleLocations, setVisibleLocations] = useState([]);
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [isSearching, setIsSearching] = useState(initialSearchState);
     const markerClickRef = useRef(false);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const loadData = async () => {
             setIsLoadingData(true);
             try {
-                const locationsQuery = getDocs(collection(db, "locations"));
-                const citiesQuery = getDocs(collection(db, "cities"));
+                const locationsResponse = await fetch('https://api.marosamap.eu/api/stores');
 
-                const [locationsSnapshot, citiesSnapshot] = await Promise.all([locationsQuery, citiesQuery]);
+                if (!locationsResponse.ok) {
+                    throw new Error('Network response was not ok');
+                }
 
-                const locationsData = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setLocations(locationsData);
+                const locationsData = await locationsResponse.json();
 
-                const citiesData = citiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setAllCities(citiesData);
+                const transformedLocationsData = locationsData.map(location => ({
+                    ...location,
+                    position: { lat: location.lat, lng: location.lng }
+                }));
 
-                console.log("Successfully fetched locations and cities.");
+                setLocations(transformedLocationsData);
 
+                const uniqueCities = citiesData.reduce((accumulator, current) => {
+                    if (!accumulator.find(item => item.city === current.city)) {
+                        accumulator.push(current);
+                    }
+                    return accumulator;
+                }, []);
+
+                const transformedCitiesData = uniqueCities.map(city => {
+                    const bulgarianName = (city.alt_names && city.alt_names.length > 0) 
+                    ? city.alt_names[city.alt_names.length - 1]
+                    : city.city;
+
+                    return {
+                        englishName: city.city,
+                        bulgarianName: bulgarianName,
+                        lat: city.lat,
+                        lng: city.lng,
+                    };
+                });
+
+                setAllCities(transformedCitiesData);
+
+                console.log("Successfully fetched data.");
+
+                console.log(transformedLocationsData);
             } catch (error) {
-                console.error("Error fetching data: ", error);
+                console.error("Error fetching data from API: ", error);
             } finally {
                 setIsLoadingData(false);
             }
         };
 
-        fetchData();
+        loadData();
     }, []);
 
     useEffect(() => {
@@ -85,33 +104,22 @@ function MarosaLocator({ initialSearchState = false }) {
         setIsSearching(initialSearchState);
     }, [initialSearchState]);
 
-    const handleNavigateToBrochure = () => {
-        navigate('/brochure');
-    };
-
-    const handleCitySelect = async (cityName) => {
+    const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
 
         console.log(`Searching for city: ${cityName}`);
-        const cityDocRef = doc(db, "cities", cityName);
 
-        try {
-            const cityDoc = await getDoc(cityDocRef);
+        const cityData = allCities.find(city => city.city === cityName);
 
-            if (cityDoc.exists()) {
-                const cityData = cityDoc.data();
-                const { position } = cityData;
-
-                map.panTo(position);
-                map.setZoom(11);
-                console.log(`Panned to ${cityName} at`, position);
-            } else {
-                console.error(`City not found in database: ${cityName}`);
-            }
-        } catch (error) {
-            console.error("Error fetching city details: ", error);
+        if (cityData) {
+            const position = { lat: cityData.lat, lng: cityData.lng };
+            map.panTo(position);
+            map.setZoom(11);
+            console.log(`Panned to ${cityName} at`, position);
+        } else {
+            console.error(`City not found in local data: ${cityName}`);
         }
-    };
+    }, [map, allCities]);
 
     const handleMapIdle = useCallback(() => {
         if (!map || locations.length === 0) return;
@@ -131,21 +139,12 @@ function MarosaLocator({ initialSearchState = false }) {
 
     const handleEnterSearchMode = () => {
         closeInfoWindow();
-        navigate('/search'); 
+        navigate('/search');
     };
 
     const handleExitSearchMode = () => {
         closeInfoWindow();
         navigate('/');
-    };
-
-    const handleHomeMarkerClick = (place) => {
-        if (map) {
-            map.panTo(place.position);
-            map.setZoom(14);
-        }
-
-        setIsSearching(true);
     };
 
     const handleMapClick = useCallback(() => {
@@ -156,16 +155,21 @@ function MarosaLocator({ initialSearchState = false }) {
         closeInfoWindow();
     }, [closeInfoWindow]);
 
-    const handleMarkerClick = (place) => {
+    const handleMarkerClick = useCallback((place) => {
         markerClickRef.current = true;
-        if (selectedPlace?.placeId === place.placeId) {
-            closeInfoWindow();
+
+        if (selectedPlace?.id === place.id) {
+            setSelectedPlace(null);
+            setPlaceDetails(null);
         } else {
-            map.panTo(place.position);
+            if (map) {
+                map.panTo(place.position);
+                map.setZoom(14);
+            }
             setSelectedPlace(place);
-            setPlaceDetails(allPlaceDetails[place.placeId] || { name: place.name });
+            setPlaceDetails(place);
         }
-    };
+    }, [map, selectedPlace]);
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
@@ -175,10 +179,9 @@ function MarosaLocator({ initialSearchState = false }) {
         locations: visibleLocations,
         allLocations: locations,
         allCities: allCities,
-        isInitialLoading: isInitialLoading || isLoadingData,
+        isInitialLoading: isLoadingData,
         selectedPlace,
         placeDetails,
-        allPlaceDetails,
         onMarkerClick: handleMarkerClick,
         onCloseInfoWindow: closeInfoWindow,
         onMapClick: handleMapClick,
@@ -199,15 +202,15 @@ function MarosaLocator({ initialSearchState = false }) {
                 <DesktopView {...viewProps} />
             ) : (
                 isSearching ? (
-                    <MobileSearchView 
-                        {...viewProps} 
-                        onExitSearch={handleExitSearchMode} 
+                    <MobileSearchView
+                        {...viewProps}
+                        onExitSearch={handleExitSearchMode}
                         onCitySelect={handleCitySelect}
                     />
                 ) : (
                     <MobileView
                         {...viewProps}
-                        onEnterSearch={handleEnterSearchMode} 
+                        onEnterSearch={handleEnterSearchMode}
                         onNavigateToBrochure={() => navigate('/brochure')}
                         onMarkerClick={handleMarkerClick}
                         selectedPlace={selectedPlace}

@@ -1,11 +1,11 @@
-export const checkIfOpen = (placeDetails) => {
-    if (!placeDetails?.opening_hours?.periods) {
+export const checkIfOpen = (location) => {
+    if (!location?.openingHours?.periods) {
         return { 
             statusText: "Няма информация",
             detailText: "",
             color: "text-gray-500", 
             isOpen: false, 
-            isClosingSoon: false, 
+            isClosingSoon: false,
         };
     }
 
@@ -14,29 +14,26 @@ export const checkIfOpen = (placeDetails) => {
     const localTime = new Date(now.toLocaleString("en-US", { timeZone }));
 
     const localDay = localTime.getDay();
-    const localHours = localTime.getHours();
-    const localMinutes = localTime.getMinutes();
-    const currentTimeInMinutes = localHours * 60 + localMinutes;
-
-    const todaysHours = placeDetails.opening_hours.periods.find(p => p.open.day === localDay);
+    const currentTimeInMinutes = localTime.getHours() * 60 + localTime.getMinutes();
+    
+    const todaysHours = location.openingHours.periods.find(p => p.open.day === localDay);
 
     if (todaysHours?.close) {
-        const openTime = parseInt(todaysHours.open.time, 10);
-        const openTimeInMinutes = Math.floor(openTime / 100) * 60 + (openTime % 100);
-        const closeTime = parseInt(todaysHours.close.time, 10);
-        const closeHours = Math.floor(closeTime / 100);
-        const closeMinutes = closeTime % 100;
-        let closeTimeInMinutes = closeHours * 60 + closeMinutes;
+        const openTimeInMinutes = todaysHours.open.hour * 60 + todaysHours.open.minute;
+        let closeTimeInMinutes = todaysHours.close.hour * 60 + todaysHours.close.minute;
 
-        if (closeTimeInMinutes < openTimeInMinutes) closeTimeInMinutes += 24 * 60;
+        if (closeTimeInMinutes < openTimeInMinutes) {
+            closeTimeInMinutes += 24 * 60;
+        }
 
         if (currentTimeInMinutes >= openTimeInMinutes && currentTimeInMinutes < closeTimeInMinutes) {
             const minutesUntilClose = closeTimeInMinutes - currentTimeInMinutes;
             const isClosingSoon = minutesUntilClose > 0 && minutesUntilClose <= 120;
+            const closeTimeFormatted = `${String(todaysHours.close.hour).padStart(2, '0')}:${String(todaysHours.close.minute).padStart(2, '0')}`;
 
             return {
                 statusText: "Отворено",
-                detailText: `Ще затвори в ${closeHours.toString().padStart(2, '0')}:${closeMinutes.toString().padStart(2, '0')}`,
+                detailText: `Ще затвори в ${closeTimeFormatted}`,
                 color: isClosingSoon ? "text-yellow-500" : "text-green-600",
                 isOpen: true,
                 isClosingSoon: isClosingSoon,
@@ -45,39 +42,35 @@ export const checkIfOpen = (placeDetails) => {
     }
 
     const dayNames = ['неделя', 'понеделник', 'вторник', 'сряда', 'четвъртък', 'петък', 'събота'];
+    
+    let nextOpeningPeriod = null;
+    for (let i = 0; i < 7; i++) {
+        const nextDayIndex = (localDay + i) % 7;
+        const periodsForDay = location.openingHours.periods
+            .filter(p => p.open.day === nextDayIndex)
+            .sort((a, b) => (a.open.hour * 60 + a.open.minute) - (b.open.hour * 60 + b.open.minute));
 
-    const sortedPeriods = [...placeDetails.opening_hours.periods].sort((a, b) => {
-        if (a.open.day !== b.open.day) return a.open.day - b.open.day;
-        return parseInt(a.open.time, 10) - parseInt(b.open.time, 10);
-    });
+        const nextPeriod = periodsForDay.find(p => {
+            const openTimeInMinutes = p.open.hour * 60 + p.open.minute;
+            return i === 0 ? openTimeInMinutes > currentTimeInMinutes : true;
+        });
 
-    let nextOpeningPeriod = sortedPeriods.find(p => {
-        const openTimeInMinutes = Math.floor(parseInt(p.open.time, 10) / 100) * 60 + (parseInt(p.open.time, 10) % 100);
-        return p.open.day === localDay && openTimeInMinutes > currentTimeInMinutes;
-    });
-
-    if (!nextOpeningPeriod) {
-        for (let i = 1; i <= 7; i++) {
-            const nextDayIndex = (localDay + i) % 7;
-            const firstPeriodOfDay = sortedPeriods.find(p => p.open.day === nextDayIndex);
-            if (firstPeriodOfDay) {
-                nextOpeningPeriod = firstPeriodOfDay;
-                break;
-            }
+        if (nextPeriod) {
+            nextOpeningPeriod = nextPeriod;
+            break;
         }
     }
 
     if (nextOpeningPeriod) {
         const day = dayNames[nextOpeningPeriod.open.day];
-        const time = nextOpeningPeriod.open.time;
-        const formattedTime = `${time.slice(0, 2)}:${time.slice(2)}`;
-
+        const formattedTime = `${String(nextOpeningPeriod.open.hour).padStart(2, '0')}:${String(nextOpeningPeriod.open.minute).padStart(2, '0')}`;
+        
         return { 
             statusText: "Затворено",
             detailText: `Отваря ${day} в ${formattedTime}`,
             color: "text-red-500",
             isOpen: false,
-            isClosingSoon: false
+            isClosingSoon: false,
         };
     }
 
@@ -86,6 +79,6 @@ export const checkIfOpen = (placeDetails) => {
         detailText: "", 
         color: "text-red-500", 
         isOpen: false,
-        isClosingSoon: false
+        isClosingSoon: false,
     };
 };
