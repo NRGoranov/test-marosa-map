@@ -15,13 +15,14 @@ import ShareIcon from "../../../assets/icons/ShareIcon";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeftIcon";
 import ChevronRightIcon from "../../../assets/icons/ChevronRightIcon";
 
-
 const MobileBrochureView = () => {
     const navigate = useNavigate();
 
     const getInitialPage = () => {
         const params = new URLSearchParams(window.location.search);
+
         const page = parseInt(params.get('page'), 10);
+
         return isNaN(page) || page < 1 ? 1 : page;
     };
 
@@ -29,23 +30,32 @@ const MobileBrochureView = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [slideDirection, setSlideDirection] = useState(0);
+
     const pdfContainerRef = useRef(null);
-    const [pdfContainerWidth, setPdfContainerWidth] = useState(0);
+
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+    const [pageAspectRatio, setPageAspectRatio] = useState(null);
 
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
-                setPdfContainerWidth(entry.contentRect.width);
+                const { width, height } = entry.contentRect;
+
+                setContainerSize({ width, height });
             }
         });
         const currentRef = pdfContainerRef.current;
+
         if (currentRef) observer.observe(currentRef);
+
         return () => { if (currentRef) observer.unobserve(currentRef); };
     }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
+
         params.set('page', currentPage);
+
         window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
     }, [currentPage]);
 
@@ -54,20 +64,31 @@ const MobileBrochureView = () => {
     const handleExit = () => navigate('/');
     const handleSearch = () => navigate('/search');
 
-    const onDocumentLoadSuccess = ({ numPages }) => {
+    const onDocumentLoadSuccess = async ({ numPages, _pdf }) => {
         setTotalPages(numPages);
+
+        if (numPages > 0) {
+            const page = await _pdf.getPage(1);
+
+            const viewport = page.getViewport({ scale: 1 });
+
+            setPageAspectRatio(viewport.width / viewport.height);
+        }
     };
 
     const handleNext = useCallback(() => {
         if (currentPage < totalPages) {
             setSlideDirection(1);
+
             setCurrentPage(prev => prev + 1);
         }
+
     }, [currentPage, totalPages]);
 
     const handlePrevious = useCallback(() => {
         if (currentPage > 1) {
             setSlideDirection(-1);
+
             setCurrentPage(prev => prev - 1);
         }
     }, [currentPage]);
@@ -75,12 +96,9 @@ const MobileBrochureView = () => {
     const bind = useDrag(({ swipe: [swipeX], event }) => {
         event.preventDefault();
 
-        if (swipeX < 0) {
-            handleNext();
-        }
-        else if (swipeX > 0) {
-            handlePrevious();
-        }
+        if (swipeX < 0) handleNext();
+
+        else if (swipeX > 0) handlePrevious();
     }, {
         axis: 'x',
         filterTaps: true,
@@ -101,17 +119,39 @@ const MobileBrochureView = () => {
             text: `Разгледайте страница ${currentPage} от нашата брошура!`,
             url: window.location.href
         };
+
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
             } else {
                 navigator.clipboard.writeText(shareData.url);
+
                 alert('Успешно копиран линк!');
             }
         } catch (err) {
             console.error("Неуспешно споделяне на страница:", err);
+
             alert('Неуспешно споделяне.');
         }
+    };
+
+    const getPageProps = () => {
+
+        if (!pageAspectRatio || containerSize.width === 0 || containerSize.height === 0) {
+            return { width: containerSize.width ? containerSize.width - 32 : undefined };
+        }
+
+        const padding = 32;
+
+        const availableWidth = containerSize.width - padding;
+        const availableHeight = containerSize.height - padding;
+        const containerAspectRatio = availableWidth / availableHeight;
+
+        if (pageAspectRatio < containerAspectRatio) {
+            return { height: availableHeight };
+        }
+
+        return { width: availableWidth };
     };
 
     const progress = totalPages > 0 ? (currentPage / totalPages) * 100 : 0;
@@ -126,20 +166,23 @@ const MobileBrochureView = () => {
                     onSearchClick={handleSearch}
                 />
             </div>
+
             <div className="flex-shrink-0 w-full bg-gray-200 h-1">
                 <div className="bg-[#AFE8A4] h-1 transition-all duration-300 ease-in-out" style={{ width: `${progress}%` }}></div>
             </div>
+
             <div className="flex-shrink-0 flex justify-between items-center p-4">
                 <span className="bg-[#C9F0C2] text-[#1B4712] font-bold text-sm px-3 py-1 rounded-lg">
                     {currentPage}/{totalPages || '...'}
                 </span>
+
                 <button onClick={handleShare} className="flex items-center text-[#1B4712] font-medium text-base">
                     <span className="border-b border-[#1B4712]">Сподели</span>
                     <ShareIcon className="ml-1" />
                 </button>
             </div>
 
-            <div className="flex-grow bg-gray-100 overflow-y-auto relative" ref={pdfContainerRef}>
+            <div className="flex-grow bg-gray-100 overflow-hidden relative" ref={pdfContainerRef}>
                 <Document
                     file={pdfFile}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -147,14 +190,15 @@ const MobileBrochureView = () => {
                     loading={<div className="text-center text-gray-500 p-10">Зареждане на PDF...</div>}
                     className="w-full h-full"
                 >
+
                     <div {...bind()} className="relative w-full h-full touch-none">
                         {pageTransitions((style, pageNum) => (
-                            <animated.div style={style} className="absolute inset-0 flex justify-center items-start p-4">
+                            <animated.div style={style} className="absolute inset-0 flex justify-center items-center p-4">
                                 <Page
                                     key={pageNum}
                                     pageNumber={pageNum}
-                                    width={pdfContainerWidth ? pdfContainerWidth - 32 : 0}
-                                    devicePixelRatio={Math.min(window.devicePixelRatio || 1, 2)}
+                                    {...getPageProps()}
+                                    devicePixelRatio={Math.min(window.devicePixelRatio || 1, 3)}
                                 />
                             </animated.div>
                         ))}
@@ -163,19 +207,30 @@ const MobileBrochureView = () => {
             </div>
 
             <div className="flex-shrink-0 flex justify-between items-center p-4">
-                <button onClick={handlePrevious} disabled={currentPage <= 1} className="p-3 bg-[#EAEAEA] text-[#8F8F8F] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Предишна страница">
+                <button
+                    onClick={handlePrevious}
+                    disabled={currentPage <= 1}
+                    className="p-3 bg-[#1B4712] text-[#AFE8A4] rounded-lg disabled:bg-[#EAEAEA] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+                    aria-label="Предишна страница"
+                >
                     <ChevronLeftIcon />
                 </button>
-                <button onClick={handleNext} disabled={currentPage >= totalPages} className="p-3 bg-[#1B4712] text-[#AFE8A4] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Следваща страница">
+
+                <button
+                    onClick={handleNext}
+                    disabled={currentPage >= totalPages && totalPages > 0}
+                    className="p-3 bg-[#1B4712] text-[#AFE8A4] rounded-lg disabled:bg-[#EAEAEA] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+                    aria-label="Следваща страница"
+                >
                     <ChevronRightIcon />
                 </button>
             </div>
 
-            <SlideDownMenu 
-                isOpen={isMenuOpen} 
-                onClose={() => setIsMenuOpen(false)} 
-                onHomeClick={handleExit} 
-                menuVariant="brochure" 
+            <SlideDownMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onHomeClick={handleExit}
+                menuVariant="brochure"
             />
         </div>
     );
