@@ -196,7 +196,6 @@ const MobileBrochureView = () => {
 
                     <div {...bind()} className="relative w-full h-full touch-none">
                         {pageTransitions((style, pageNum) => (
-                            // Step 2.2: Add onClick to open the zoom view
                             <animated.div
                                 style={style}
                                 className="absolute inset-0 flex justify-center items-center p-4 cursor-zoom-in"
@@ -250,14 +249,15 @@ const MobileBrochureView = () => {
                     >
                         &times;
                     </button>
+
                     <div className="flex-grow w-full h-full">
                         <TransformWrapper
                             initialScale={1}
                             minScale={1}
                             maxScale={8}
                             centerOnInit={true}
-                            limitToBounds={true} // Prevents panning outside the image
-                            doubleClick={{ disabled: true }} // Disables double-click zoom if not needed
+                            limitToBounds={true}
+                            doubleClick={{ disabled: true }}
                         >
                             <TransformComponent
                                 wrapperStyle={{ width: '100%', height: '100%' }}
@@ -267,9 +267,7 @@ const MobileBrochureView = () => {
                                     <Document file={pdfFile}>
                                         <Page
                                             pageNumber={currentPage}
-                                            // This is the key change: render to fit the screen width initially
                                             width={window.innerWidth}
-                                            // Use devicePixelRatio for a high-quality render, perfect for zooming
                                             devicePixelRatio={Math.min(window.devicePixelRatio || 1, 3)}
                                             renderTextLayer={false}
                                             renderAnnotationLayer={false}
