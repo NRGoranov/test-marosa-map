@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { useTransition, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
 import { useNavigate } from 'react-router-dom';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 
@@ -30,11 +31,11 @@ const MobileBrochureView = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [slideDirection, setSlideDirection] = useState(0);
-
-    const pdfContainerRef = useRef(null);
-
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [pageAspectRatio, setPageAspectRatio] = useState(null);
+    const [isZoomed, setIsZoomed] = useState(false);
+
+    const pdfContainerRef = useRef(null);
 
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
@@ -64,11 +65,11 @@ const MobileBrochureView = () => {
     const handleExit = () => navigate('/');
     const handleSearch = () => navigate('/search');
 
-    const onDocumentLoadSuccess = async ({ numPages, _pdf }) => {
-        setTotalPages(numPages);
+    const onDocumentLoadSuccess = async (pdf) => {
+        setTotalPages(pdf.numPages);
 
-        if (numPages > 0) {
-            const page = await _pdf.getPage(1);
+        if (pdf.numPages > 0) {
+            const page = await pdf.getPage(1);
 
             const viewport = page.getViewport({ scale: 1 });
 
@@ -94,6 +95,8 @@ const MobileBrochureView = () => {
     }, [currentPage]);
 
     const bind = useDrag(({ swipe: [swipeX], event }) => {
+        if (isZoomed) return;
+
         event.preventDefault();
 
         if (swipeX < 0) handleNext();
@@ -193,7 +196,12 @@ const MobileBrochureView = () => {
 
                     <div {...bind()} className="relative w-full h-full touch-none">
                         {pageTransitions((style, pageNum) => (
-                            <animated.div style={style} className="absolute inset-0 flex justify-center items-center p-4">
+                            // Step 2.2: Add onClick to open the zoom view
+                            <animated.div
+                                style={style}
+                                className="absolute inset-0 flex justify-center items-center p-4 cursor-zoom-in"
+                                onClick={() => setIsZoomed(true)}
+                            >
                                 <Page
                                     key={pageNum}
                                     pageNumber={pageNum}
@@ -232,6 +240,47 @@ const MobileBrochureView = () => {
                 onHomeClick={handleExit}
                 menuVariant="brochure"
             />
+
+            {isZoomed && (
+                <div className="fixed inset-0 z-50 bg-black bg-opacity-85 flex flex-col" style={{ touchAction: 'none' }}>
+                    <button
+                        className="absolute top-4 right-4 text-white text-5xl z-50"
+                        onClick={() => setIsZoomed(false)}
+                        aria-label="Close zoomed view"
+                    >
+                        &times;
+                    </button>
+                    <div className="flex-grow w-full h-full">
+                        <TransformWrapper
+                            initialScale={1}
+                            minScale={1}
+                            maxScale={8}
+                            centerOnInit={true}
+                            limitToBounds={true} // Prevents panning outside the image
+                            doubleClick={{ disabled: true }} // Disables double-click zoom if not needed
+                        >
+                            <TransformComponent
+                                wrapperStyle={{ width: '100%', height: '100%' }}
+                                contentStyle={{ width: '100%', height: '100%' }}
+                            >
+                                <div className="flex justify-center items-center w-full h-full">
+                                    <Document file={pdfFile}>
+                                        <Page
+                                            pageNumber={currentPage}
+                                            // This is the key change: render to fit the screen width initially
+                                            width={window.innerWidth}
+                                            // Use devicePixelRatio for a high-quality render, perfect for zooming
+                                            devicePixelRatio={Math.min(window.devicePixelRatio || 1, 3)}
+                                            renderTextLayer={false}
+                                            renderAnnotationLayer={false}
+                                        />
+                                    </Document>
+                                </div>
+                            </TransformComponent>
+                        </TransformWrapper>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

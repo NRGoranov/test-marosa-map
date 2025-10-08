@@ -23,7 +23,8 @@
     "react-pdf": "^7.7.0",
     "react-router-dom": "^7.6.2",
     "react-split": "^2.0.14",
-    "react-spring-bottom-sheet": "^3.4.1"
+    "react-spring-bottom-sheet": "^3.4.1",
+    "react-zoom-pan-pinch": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
