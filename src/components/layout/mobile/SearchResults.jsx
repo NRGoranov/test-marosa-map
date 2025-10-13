@@ -11,7 +11,7 @@ const SearchResults = ({ results, onCityClick, onLocationClick, onExitSearch }) 
 
     return (
         <div className="fixed inset-0 top-[68px] bg-white z-30 flex flex-col">
-            <div className="flex-grow overflow-y-auto">
+            <div className="flex-grow overflow-y-auto overscroll-contain">
                 {cities.length > 0 && (
                     <div className="p-4">
                         <h3 className="text-lg font-bold text-gray-800 mb-2">Градове</h3>
