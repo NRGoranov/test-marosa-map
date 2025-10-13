@@ -63,7 +63,7 @@ const MobileView = (props) => {
 
         setSearchResults({ cities: matchingCities, locations: matchingLocations });
     }, [searchTerm, allLocations, allCities]);
-    
+
     useEffect(() => {
         if (!sheetRef.current) return;
 
@@ -79,7 +79,7 @@ const MobileView = (props) => {
 
         setIsSearching(false);
     };
-    
+
     const handleMapClickWrapper = (event) => {
         if (isSearching) {
             setIsSearching(false);
@@ -107,7 +107,7 @@ const MobileView = (props) => {
         setSearchTerm('');
         setIsSearching(false);
     };
-    
+
     const toggleSearchMode = () => {
         setIsSearching(prev => !prev);
     };
@@ -120,40 +120,41 @@ const MobileView = (props) => {
         }
     };
 
-    const handleMenuClick = async () => {
+    const handleMenuClick = () => {
         if (isMenuOpen) {
             setIsMenuOpen(false);
         } else {
-            await closeBottomSheet();
+            closeBottomSheet();
 
             setIsMenuOpen(true);
         }
     };
 
     const handleShareClick = (location, details) => {
-        const combinedData = {
-            ...location,
-            ...details,
-            name: details?.name || location.name
-        };
+        const name = location.displayName?.text;
 
         let finalMapsUrl = '';
+
         const lat = details?.geometry?.location?.lat();
         const lng = details?.geometry?.location?.lng();
 
         if (lat && lng) {
-            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
+            finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
         } else {
-            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
+            finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
         }
 
         const comprehensiveLocationData = {
-            ...combinedData,
-            mapsUrl: finalMapsUrl,
+            ...location,
+            ...details,
+            name,
+            displayName: { text: name },
+            rating: 5,
+            mapsUrl: finalMapsUrl
         };
 
         setLocationToShare(comprehensiveLocationData);
-    }
+    };
 
     const renderHeader = () => {
         if (isSearching) {
@@ -192,6 +193,7 @@ const MobileView = (props) => {
                 </div>
             );
         }
+
         return (
             <div className="p-4 bg-white shadow-sm">
                 <MobileViewHeader
@@ -228,16 +230,16 @@ const MobileView = (props) => {
                     />
                 )}
             </div>
-            
+
             <SlideDownMenu
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
                 onBrochureClick={onNavigateToBrochure}
                 menuVariant="home"
             />
-            
+
             {!isSearching && (
-                 <BottomSheet
+                <BottomSheet
                     open
                     blocking={false}
                     ref={sheetRef}
@@ -246,10 +248,10 @@ const MobileView = (props) => {
                     onSnap={({ index }) => setIsSheetExpanded(index > 0)}
                     header={
                         <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
-                           {selectedPlace
-                               ? selectedPlace.displayName.text
-                               : `${locations.length} ${locations.length === 1 ? 'намерен обект' : 'намерени обекта'}`
-                           }
+                            {selectedPlace
+                                ? selectedPlace.displayName.text
+                                : `${locations.length} ${locations.length === 1 ? 'намерен обект' : 'намерени обекта'}`
+                            }
                         </div>
                     }
                 >
