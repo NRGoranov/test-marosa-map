@@ -20,6 +20,8 @@ const MobileView = (props) => {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [locationToShare, setLocationToShare] = useState(null);
+    const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
     const sheetRef = useRef();
 
     useEffect(() => {
@@ -37,6 +39,22 @@ const MobileView = (props) => {
         maxHeight - 110,
     ];
 
+    const closeBottomSheet = () => {
+        if (sheetRef.current) {
+            sheetRef.current.snapTo(({ snapPoints }) => snapPoints[0]);
+        }
+    };
+
+    const handleMenuClick = async () => {
+        if (isMenuOpen) {
+            setIsMenuOpen(false);
+        } else {
+            await closeBottomSheet();
+
+            setIsMenuOpen(true);
+        }
+    };
+
     const handleShareClick = (location, details) => {
         const combinedData = {
             ...location,
@@ -45,21 +63,19 @@ const MobileView = (props) => {
         };
 
         let finalMapsUrl = '';
-
         const lat = details?.geometry?.location?.lat();
         const lng = details?.geometry?.location?.lng();
 
         if (lat && lng) {
-            finalMapsUrl = `https://www.google.com/maps/dir//${lat},${lng}`;
+            finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
         } else {
-            finalMapsUrl = `https://www.google.com/maps/dir//${encodeURIComponent(combinedData.name)}`;
+            finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(combinedData.name)}`;
         }
 
         const comprehensiveLocationData = {
             ...combinedData,
             mapsUrl: finalMapsUrl
         };
-
         setLocationToShare(comprehensiveLocationData);
     };
 
@@ -68,12 +84,19 @@ const MobileView = (props) => {
             <div className="absolute top-0 left-0 right-0 z-20 p-4 bg-white shadow-sm">
                 <MobileViewHeader
                     onSearchClick={onEnterSearch}
-                    onMenuClick={() => setIsMenuOpen(prev => !prev)}
+                    onMenuClick={handleMenuClick}
                     isMenuOpen={isMenuOpen}
                 />
             </div>
 
-            <div className="h-full w-full">
+            <div className="h-full w-full relative">
+                {isSheetExpanded && (
+                    <div
+                        className="absolute inset-0 z-10"
+                        onClick={closeBottomSheet}
+                        aria-label="Close location details"
+                    />
+                )}
                 {props.isLoaded && (
                     <Map
                         {...rest}
@@ -98,6 +121,7 @@ const MobileView = (props) => {
                 ref={sheetRef}
                 snapPoints={snapPoints}
                 defaultSnap={({ snapPoints }) => snapPoints[0]}
+                onSnap={({ index }) => setIsSheetExpanded(index > 0)}
                 header={
                     <div className="flex items-center justify-center text-lg font-bold text-[#1B4712] p-2">
                         {selectedPlace ? selectedPlace.displayName.text : ''}
