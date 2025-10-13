@@ -4,15 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
-import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 import MobileView from '../components/layout/mobile/MobileView';
+//import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 
 import StyleInjector from '../components/ui/StyleInjector';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
 import citiesData from '../data/filtered_cities_minified.json';
 
-function MarosaLocator({ initialSearchState = false }) {
+function MarosaLocator() {
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -29,7 +29,7 @@ function MarosaLocator({ initialSearchState = false }) {
     const [placeDetails, setPlaceDetails] = useState(null);
     const [visibleLocations, setVisibleLocations] = useState([]);
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [isSearching, setIsSearching] = useState(initialSearchState);
+    //const [isSearching, setIsSearching] = useState(initialSearchState);
     const markerClickRef = useRef(false);
 
     useEffect(() => {
@@ -101,9 +101,9 @@ function MarosaLocator({ initialSearchState = false }) {
         }
     }, [isLoaded, map]);
 
-    useEffect(() => {
+    {/* useEffect(() => {
         setIsSearching(initialSearchState);
-    }, [initialSearchState]);
+    }, [initialSearchState]); */}
 
     const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
@@ -138,15 +138,15 @@ function MarosaLocator({ initialSearchState = false }) {
         setPlaceDetails(null);
     }, []);
 
-    const handleEnterSearchMode = () => {
+    {/* const handleEnterSearchMode = () => {
         closeInfoWindow();
         navigate('/search');
-    };
+    }; */}
 
-    const handleExitSearchMode = () => {
+    {/* const handleExitSearchMode = () => {
         closeInfoWindow();
         navigate('/');
-    };
+    }; */}
 
     const handleMapClick = useCallback(() => {
         if (markerClickRef.current) {
@@ -194,6 +194,7 @@ function MarosaLocator({ initialSearchState = false }) {
         loadError,
         isLoaded,
         showInfoWindow: isDesktop,
+        onCitySelect: handleCitySelect,
     };
 
     return (
@@ -209,22 +210,10 @@ function MarosaLocator({ initialSearchState = false }) {
             {isDesktop ? (
                 <DesktopView {...viewProps} />
             ) : (
-                isSearching ? (
-                    <MobileSearchView
-                        {...viewProps}
-                        onExitSearch={handleExitSearchMode}
-                        onCitySelect={handleCitySelect}
-                    />
-                ) : (
-                    <MobileView
-                        {...viewProps}
-                        onEnterSearch={handleEnterSearchMode}
-                        onNavigateToBrochure={() => navigate('/brochure')}
-                        onMarkerClick={handleMarkerClick}
-                        selectedPlace={selectedPlace}
-                        onCloseInfoWindow={closeInfoWindow}
-                    />
-                )
+                <MobileView
+                    {...viewProps}
+                    onNavigateToBrochure={() => navigate('/brochure')}
+                />
             )}
         </>
     );
