@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { checkIfOpen } from '../../../../utils/timeUtils';
 
-//import StarRating from '../../../ui/StarRating';
+import StarRating from '../../../ui/StarRating';
 import DirectionsIcon from '../../../../assets/icons/DirectionsIcon';
 import ShareLocationIcon from '../../../../assets/icons/ShareLocationIcon';
 
@@ -17,11 +17,13 @@ const LocationListItem = React.forwardRef(({
     isMobileView
 }, ref) => {
     const status = checkIfOpen(location);
+
     const photoUrl = location.imageUrl || (location.photos ? location.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png');
     const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.name)}&query_place_id=${location.placeId}`;
 
     const handleShare = (e) => {
         e.stopPropagation();
+        
         onShareClick(location);
     };
 
@@ -70,21 +72,19 @@ const LocationListItem = React.forwardRef(({
                         </div>
                     </div>
 
-                    {/* 
-                    {location.rating && (
-                        <div className="flex items-center gap-2">
-                            <span className="font-montserrat font-medium text-sm text-[#8F8F8F]">
-                                {details.rating.toFixed(1)}
-                            </span>
-                            <StarRating rating={details.rating} starSize="text-sm" />
-                        </div>
-                    )}
-                    */}
+                    <div className="flex items-center gap-2">
+                        <span className="font-montserrat font-medium text-sm text-[#8F8F8F]">
+                            5.0
+                        </span>
 
+                        <StarRating rating={5} starSize="text-sm" />
+                    </div>
+                    
                     <div className="flex items-baseline gap-x-2 flex-wrap">
                         <span className={`font-montserrat font-semibold text-base ${status.color}`}>
                             {status.statusText}
                         </span>
+
                         <span className="font-montserrat font-medium text-base text-[#8F8F8F]">
                             {status.detailText}
                         </span>
