@@ -4,6 +4,7 @@ import { useTransition, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
 import { useNavigate } from 'react-router-dom';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { Helmet } from 'react-helmet-async';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 
@@ -161,6 +162,14 @@ const MobileBrochureView = () => {
 
     return (
         <div className="flex flex-col h-screen w-screen bg-white">
+            <Helmet>
+                <title>{`Мароса Градина - Каталог 2025 (стр. ${currentPage})`}</title>
+                <meta property="og:title" content={`Мароса Градина - Каталог 2025 (стр. ${currentPage})`} />
+                <meta property="og:description" content={`Разгледайте страница ${currentPage} от нашия нов каталог.`} />
+                <meta property="og:image" content="https://marosamap.eu/brochure-preview.jpg" />
+                <meta property="og:url" content={`https://marosamap.eu/brochure?page=${currentPage}`} />
+            </Helmet>
+
             <div className="flex-shrink-0 p-4 border-b border-gray-200">
                 <MobileViewHeader
                     onLogoClick={handleExit}

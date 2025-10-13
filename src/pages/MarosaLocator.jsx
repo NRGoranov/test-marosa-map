@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileSearchView from '../components/layout/mobile/MobileSearchView';
@@ -58,9 +59,9 @@ function MarosaLocator({ initialSearchState = false }) {
                 }, []);
 
                 const transformedCitiesData = uniqueCities.map(city => {
-                    const bulgarianName = (city.alt_names && city.alt_names.length > 0) 
-                    ? city.alt_names[city.alt_names.length - 1]
-                    : city.city;
+                    const bulgarianName = (city.alt_names && city.alt_names.length > 0)
+                        ? city.alt_names[city.alt_names.length - 1]
+                        : city.city;
 
                     return {
                         englishName: city.city,
@@ -197,6 +198,13 @@ function MarosaLocator({ initialSearchState = false }) {
 
     return (
         <>
+            <Helmet>
+                <title>Мароса Градина Карта</title>
+                <meta property="og:title" content="Мароса Градина Карта" />
+                <meta property="og:description" content="Намерете най-близкия до вас търговски обект." />
+                <meta property="og:image" content="https://marosamap.eu/brochure-preview.jpg" />
+            </Helmet>
+
             <StyleInjector />
             {isDesktop ? (
                 <DesktopView {...viewProps} />
