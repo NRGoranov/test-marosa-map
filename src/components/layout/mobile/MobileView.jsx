@@ -74,6 +74,16 @@ const MobileView = (props) => {
         }
     }, [selectedPlace]);
 
+    useEffect(() => {
+        if (searchTerm) {
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [searchTerm]); 
+
     const handleMarkerClickAndExitSearch = (place) => {
         onMarkerClick(place);
 
