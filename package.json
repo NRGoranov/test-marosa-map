@@ -16,15 +16,15 @@
     "@use-gesture/react": "^10.3.1",
     "@vis.gl/react-google-maps": "^1.5.3",
     "firebase": "^11.10.0",
-    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
     "react-pageflip": "^2.0.3",
-    "react-pdf": "^10.0.1",
+    "react-pdf": "^7.7.0",
     "react-router-dom": "^7.6.2",
     "react-split": "^2.0.14",
-    "react-spring-bottom-sheet": "^3.4.1"
+    "react-spring-bottom-sheet": "^3.4.1",
+    "react-zoom-pan-pinch": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
