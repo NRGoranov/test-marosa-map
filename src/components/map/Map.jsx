@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { GoogleMap, Marker, InfoWindow, Data } from '@react-google-maps/api';
+import { GoogleMap, Marker, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
 import CustomZoomControl from './map-buttons/CustomZoomControl';
@@ -14,6 +14,47 @@ import borderData from '../../data/bulgaria-border.json';
 const mapContainerStyle = { width: '100%', height: '100%' };
 
 const DEFAULT_CENTER = { lat: 42.7339, lng: 25.4858 };
+
+const clusterStyles = [
+    {
+        textColor: 'white',
+        url: '/cluster-1.png',
+        height: 50,
+        width: 50,
+        textSize: 20,
+    },
+    {
+        textColor: 'white',
+        url: '/cluster-2.png',
+        height: 55,
+        width: 55,
+        textSize: 21,
+    },
+    {
+        textColor: 'white',
+        url: '/cluster-3.png',
+        height: 60,
+        width: 60,
+        textSize: 22,
+    },
+];
+
+const calculator = (markers, numStyles) => {
+    const count = markers.length;
+    let index = 0;
+
+    if (count >= 10) {
+        index = 1;
+    }
+    if (count >= 15) {
+        index = 2;
+    }
+
+    return {
+        text: count.toString(),
+        index: index + 1,
+    };
+};
 
 const Map = ({
     map,
@@ -57,7 +98,7 @@ const Map = ({
         top: 0,
         left: 0,
         width: '100vw',
-        height: '-webkit-fill-available',        //height: '100vh',
+        height: '-webkit-fill-available',
         zIndex: 1000,
     };
 
@@ -92,40 +133,36 @@ const Map = ({
                     }}
                 />
 
-                {locations && locations.map((loc) => {
-                    const isSelected = selectedPlace?.id === loc.id;
-                    const isHovered = hoveredPlaceId === loc.placeId;
+                <MarkerClustererF options={{ styles: clusterStyles }}>
+                    {(clusterer) =>
+                        locations && locations.map((loc) => {
+                            const isSelected = selectedPlace?.id === loc.id;
+                            const isHovered = hoveredPlaceId === loc.placeId;
+                            const { url, size } = getMarkerIcons(isSelected, isHovered, loc);
 
-                    {/*let detailsForIcon = null;
-                    if (isSelected) {
-                        detailsForIcon = placeDetails;
-                    } else if (isHovered) {
-                        detailsForIcon = locations.find(location => location.placeId === hoveredPlaceId);
+                            return (
+                                <MarkerF
+                                    key={loc.id}
+                                    position={loc.position}
+                                    clusterer={clusterer}
+                                    onClick={() => onMarkerClick(loc)}
+                                    icon={{
+                                        url: url,
+                                        scaledSize: size,
+                                        anchor: new window.google.maps.Point(size.width / 2, size.height),
+                                    }}
+                                    title={loc.displayName.text}
+                                    zIndex={isSelected || isHovered ? 10 : 1}
+                                    onMouseOver={() => onMarkerHover(loc.placeId)}
+                                    onMouseOut={() => onMarkerHover(null)}
+                                />
+                            );
+                        })
                     }
-                    */}
-
-                    const { url, size } = getMarkerIcons(isSelected, isHovered, loc);
-
-                    return (
-                        <Marker
-                            key={loc.id}
-                            position={loc.position}
-                            onClick={() => onMarkerClick(loc)}
-                            icon={{
-                                url: url,
-                                scaledSize: size,
-                                anchor: new window.google.maps.Point(size.width / 2, size.height),
-                            }}
-                            title={loc.displayName.text}
-                            zIndex={isSelected || isHovered ? 10 : 1}
-                            onMouseOver={() => onMarkerHover(loc.placeId)}
-                            onMouseOut={() => onMarkerHover(null)}
-                        />
-                    );
-                })}
+                </MarkerClustererF>
 
                 {currentUserPosition && (
-                    <Marker
+                    <MarkerF
                         position={currentUserPosition}
                         title="Your Location"
                         icon={{
