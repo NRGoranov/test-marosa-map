@@ -17,25 +17,25 @@ const DEFAULT_CENTER = { lat: 42.7339, lng: 25.4858 };
 
 const clusterStyles = [
     {
-        textColor: 'white',
+        textColor: '#00562A',
         url: '/cluster-1.png',
-        height: 50,
-        width: 50,
-        textSize: 20,
-    },
-    {
-        textColor: 'white',
-        url: '/cluster-2.png',
-        height: 55,
-        width: 55,
-        textSize: 21,
-    },
-    {
-        textColor: 'white',
-        url: '/cluster-3.png',
-        height: 60,
-        width: 60,
+        height: 80,
+        width: 80,
         textSize: 22,
+    },
+    {
+        textColor: '#00562A',
+        url: '/cluster-2.png',
+        height: 85,
+        width: 85,
+        textSize: 23,
+    },
+    {
+        textColor: '#00562A',
+        url: '/cluster-3.png',
+        height: 90,
+        width: 90,
+        textSize: 24,
     },
 ];
 
@@ -43,10 +43,10 @@ const calculator = (markers, numStyles) => {
     const count = markers.length;
     let index = 0;
 
-    if (count >= 10) {
+    if (count >= 6) {
         index = 1;
     }
-    if (count >= 15) {
+    if (count >= 16) {
         index = 2;
     }
 
