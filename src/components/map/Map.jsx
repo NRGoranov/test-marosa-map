@@ -21,21 +21,21 @@ const clusterStyles = [
         url: '/cluster-1.png',
         height: 80,
         width: 80,
-        textSize: 22,
+        textSize: 20,
     },
     {
         textColor: '#00562A',
         url: '/cluster-2.png',
         height: 85,
         width: 85,
-        textSize: 23,
+        textSize: 21,
     },
     {
         textColor: '#00562A',
         url: '/cluster-3.png',
         height: 90,
         width: 90,
-        textSize: 24,
+        textSize: 22,
     },
 ];
 
