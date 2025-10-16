@@ -5,7 +5,6 @@ import { Helmet } from 'react-helmet-async';
 
 import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileView from '../components/layout/mobile/MobileView';
-//import MobileSearchView from '../components/layout/mobile/MobileSearchView';
 
 import StyleInjector from '../components/ui/StyleInjector';
 import { useMediaQuery } from '../hooks/useMediaQuery';
@@ -19,6 +18,7 @@ function MarosaLocator() {
     });
 
     const navigate = useNavigate();
+
     const [locations, setLocations] = useState([]);
     const [allCities, setAllCities] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -28,8 +28,9 @@ function MarosaLocator() {
     const [currentUserPosition, setCurrentUserPosition] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
     const [visibleLocations, setVisibleLocations] = useState([]);
+
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    //const [isSearching, setIsSearching] = useState(initialSearchState);
+
     const markerClickRef = useRef(false);
 
     useEffect(() => {
@@ -101,10 +102,6 @@ function MarosaLocator() {
         }
     }, [isLoaded, map]);
 
-    {/* useEffect(() => {
-        setIsSearching(initialSearchState);
-    }, [initialSearchState]); */}
-
     const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
 
@@ -137,16 +134,6 @@ function MarosaLocator() {
         setSelectedPlace(null);
         setPlaceDetails(null);
     }, []);
-
-    {/* const handleEnterSearchMode = () => {
-        closeInfoWindow();
-        navigate('/search');
-    }; */}
-
-    {/* const handleExitSearchMode = () => {
-        closeInfoWindow();
-        navigate('/');
-    }; */}
 
     const handleMapClick = useCallback(() => {
         if (markerClickRef.current) {

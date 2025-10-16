@@ -119,7 +119,15 @@ const MobileView = (props) => {
     };
 
     const toggleSearchMode = () => {
-        setIsSearching(prev => !prev);
+        if (isMenuOpen) {
+            setIsMenuOpen(false);
+
+            setTimeout(() => {
+                setIsSearching(true);
+            }, 400);
+        } else {
+            setIsSearching(prev => !prev);
+        }
     };
 
     const snapPoints = ({ maxHeight }) => [63, maxHeight * 0.55, maxHeight - 110];
@@ -131,11 +139,14 @@ const MobileView = (props) => {
     };
 
     const handleMenuClick = () => {
+        if (isSearching) {
+            setIsSearching(false);
+            setSearchTerm('');
+        }
         if (isMenuOpen) {
             setIsMenuOpen(false);
         } else {
             closeBottomSheet();
-
             setIsMenuOpen(true);
         }
     };
