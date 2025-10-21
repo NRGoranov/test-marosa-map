@@ -8,17 +8,27 @@ import { Helmet } from 'react-helmet-async';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
 
+import { useMediaQuery } from '../../../hooks/useMediaQuery';
+
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
+import DesktopBrochure from "../desktop/DesktopBrochure";
 import MobileViewHeader from "./MobileViewHeader";
 import SlideDownMenu from "../../ui/SlideDownMenu";
+
 import ShareIcon from "../../../assets/icons/ShareIcon";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeftIcon";
 import ChevronRightIcon from "../../../assets/icons/ChevronRightIcon";
 
 const MobileBrochureView = () => {
     const navigate = useNavigate();
+
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+
+    if (isDesktop) {
+        return <DesktopBrochure />;
+    }
 
     const getInitialPage = () => {
         const params = new URLSearchParams(window.location.search);
