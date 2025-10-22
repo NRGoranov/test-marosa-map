@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FiCopy, FiMail, FiX } from 'react-icons/fi';
 import { FaViber, FaFacebookMessenger, FaStar } from 'react-icons/fa';
 
-import StarRating from '../../ui/StarRating';
+import StarRating from '../../../assets/StarRating';
 import { checkIfOpen } from '../../../utils/timeUtils';
 
 const MobileShareModal = ({ isOpen, onClose, place }) => {

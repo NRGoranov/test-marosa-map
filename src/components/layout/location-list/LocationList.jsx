@@ -13,7 +13,7 @@ const LocationList = (props) => {
                     onClick={() => props.onListItemClick(location)}
                     onMouseOver={() => props.onListItemHover(location.placeId)}
                     onMouseOut={() => props.onListItemHover(null)}
-                    onShareClick={props.onShareClick} //
+                    onShareClick={props.onShareClick} 
                     isHovered={props.hoveredPlaceId === location.placeId}
                     isSelected={props.selectedPlaceId === location.placeId}
                     isMobileView={props.isMobileView}

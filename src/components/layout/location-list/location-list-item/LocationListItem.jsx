@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { checkIfOpen } from '../../../../utils/timeUtils';
 
-import StarRating from '../../../ui/StarRating';
+import StarRating from '../../../../assets/StarRating';
 import DirectionsIcon from '../../../../assets/icons/DirectionsIcon';
 import ShareLocationIcon from '../../../../assets/icons/ShareLocationIcon';
 
@@ -19,11 +19,12 @@ const LocationListItem = React.forwardRef(({
     const status = checkIfOpen(location);
 
     const photoUrl = location.imageUrl || (location.photos ? location.photos[0].getUrl({ maxWidth: 680, maxHeight: 518 }) : 'https://i.imgur.com/g2a4JAh.png');
+
     const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.name)}&query_place_id=${location.placeId}`;
 
     const handleShare = (e) => {
         e.stopPropagation();
-        
+
         onShareClick(location);
     };
 
@@ -49,8 +50,8 @@ const LocationListItem = React.forwardRef(({
                             {location.displayName.text}
                         </h3>
 
-                        <div className="flex items-center space-x-2 flex-shrink-0">
-                            {isMobileView && (
+                        <div className="flex flex-col space-y-2 flex-shrink-0">
+                            {onShareClick && (
                                 <button
                                     onClick={handleShare}
                                     className="flex justify-center items-center w-9 h-9 bg-[#C9F0C2] rounded-[9px] hover:opacity-80 transition-opacity"
@@ -79,7 +80,7 @@ const LocationListItem = React.forwardRef(({
 
                         <StarRating rating={5} starSize="text-sm" />
                     </div>
-                    
+
                     <div className="flex items-baseline gap-x-2 flex-wrap">
                         <span className={`font-montserrat font-semibold text-base ${status.color}`}>
                             {status.statusText}
