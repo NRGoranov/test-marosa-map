@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { FiCopy, FiMail, FiX } from 'react-icons/fi';
-import { FaViber, FaFacebookMessenger } from 'react-icons/fa';
+import { FaViber, FaFacebook } from 'react-icons/fa';
 
 import { checkIfOpen } from "../../../utils/timeUtils";
 
@@ -59,7 +59,7 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
 
     const shareOptions = [
         { name: 'Копирай линка', icon: <FiCopy size={20} />, action: handleCopy, isLink: false },
-        { name: 'Messenger', icon: <FaFacebookMessenger size={20} />, href: `fb-messenger://share/?link=${encodedUrl}`, isLink: true },
+        { name: 'Facebook', icon: <FaFacebook size={20} />, href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, isLink: true },
         { name: 'Viber', icon: <FaViber size={20} />, href: `viber://forward?text=${encodedUrl}`, isLink: true },
         { name: 'Email', icon: <FiMail size={20} />, href: `mailto:?subject=Упътване до ${encodeURIComponent(place.name)}&body=Координатите на даденната точка: ${encodedUrl}`, isLink: true }
     ];
