@@ -24,6 +24,8 @@ const DesktopView = (props) => {
         loadError,
         isLoaded,
         showInfoWindow,
+        allCities,
+        onCitySelect,
     } = props;
 
     const [splitSizes, setSplitSizes] = useState([41, 59]);
@@ -79,8 +81,10 @@ const DesktopView = (props) => {
                 selectedPlaceId={selectedPlace?.placeId}
                 hoveredPlaceId={hoveredPlaceId}
                 isMobileView={false}
+                allLocations={allLocations}
+                allCities={allCities}
+                onCitySelect={onCitySelect}
             />
-
             <aside className="h-full bg-gray-200 flex items-center justify-center">
                 {loadError && <div>Error loading maps.</div>}
                 {!isLoaded && <div className="text-gray-600">Loading Map...</div>}

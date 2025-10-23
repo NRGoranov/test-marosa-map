@@ -11,7 +11,9 @@ import CustomZoomControl from './map-buttons/CustomZoomControl';
 
 import { mapStyles } from './mapStyles';
 
-import borderData from '../../data/bulgaria-border.json';
+import onlyBordersData from '../../data/bulgaria-border.json';
+import miniBulgarianBordersData from '../../data/bulgarian-provinces-borders.json';
+import fullBulgarianBordersData from '../../data/bulgarian-cities-borders.json';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
 
@@ -145,7 +147,7 @@ const Map = ({
 
                 <Data
                     onLoad={(data) => {
-                        data.addGeoJson(borderData);
+                        data.addGeoJson(miniBulgarianBordersData);
                         data.setStyle({
                             fillOpacity: 0,
                             strokeColor: '#1B4712',
