@@ -10,17 +10,20 @@ import BrochureIcon from '../../../assets/icons/DesktopBrochureIcon';
 const Footer = () => {
     return (
         <footer className="flex justify-between items-center">
-
-            {/* Променен клас от text-sm на text-base */}
             <p className="text-base text-[#1B4712] flex items-center space-x-2">
-                <span>Разгледайте нашата</span>
+                <span>
+                    Разгледайте нашата
+                </span>
 
                 <Link
                     to="/brochure"
                     className="font-bold text-[#00562A] bg-[#C9F0C2] py-2 px-4 rounded-2xl border border-[#00562A] hover:bg-[#b8e8b1] transition-colors duration-200 flex items-center space-x-2"
                 >
                     <BrochureIcon className="h-5 w-5 text-[#00562A]" /> 
-                    <span>Брошура</span>
+
+                    <span>
+                        Брошура
+                    </span>
                 </Link>
             </p>
 
