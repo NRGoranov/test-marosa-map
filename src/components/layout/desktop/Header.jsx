@@ -6,7 +6,7 @@ const Header = () => {
     return (
         <header>
             <a href="/" aria-label="Homepage">
-                <div className="w-52 cursor-pointer">
+                <div className="w-40 lg:w-52 cursor-pointer">
                     <Logo />
                 </div>
             </a>
