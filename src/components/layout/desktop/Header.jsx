@@ -1,5 +1,6 @@
 import React from 'react';
-import { FiExternalLink } from 'react-icons/fi'; // Import the icon
+import { FiExternalLink } from 'react-icons/fi';
+
 import Logo from '../../../assets/icons/Logo';
 
 const Header = () => {
