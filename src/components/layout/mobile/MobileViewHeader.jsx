@@ -6,17 +6,19 @@ import BurgerMenuIcon from '../../../assets/icons/BurgerMenuIcon';
 
 const MobileViewHeader = ({ onSearchClick, onMenuClick, onLogoClick, isMenuOpen }) => {
     const buttonBaseStyles = "p-1.5 rounded-lg border-1 transition-colors";
+
     const activeBorder = "border-[#1B4712]";
+    
     const inactiveBorder = "border-[#AFE8A4]";
 
-    const LogoWrapper = onLogoClick ? 'button' : 'div';
+    const LogoWrapper = 'a';
 
     return (
         <header className="flex justify-between items-center">
-            <LogoWrapper 
-                onClick={onLogoClick} 
-                className="w-28"
-                aria-label={onLogoClick ? "Go to homepage" : undefined}
+            <LogoWrapper
+                href="/"
+                className="w-28 cursor-pointer"
+                aria-label="Go to homepage"
             >
                 <Logo />
             </LogoWrapper>
@@ -25,6 +27,7 @@ const MobileViewHeader = ({ onSearchClick, onMenuClick, onLogoClick, isMenuOpen 
                 <button onClick={onSearchClick} aria-label="Search locations" className="p-2">
                     <SearchIcon />
                 </button>
+
                 <button
                     onClick={onMenuClick}
                     aria-label="Open menu"

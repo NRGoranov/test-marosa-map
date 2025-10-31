@@ -45,16 +45,16 @@ const LocationListItem = React.forwardRef(({
                 ></div>
 
                 <div className="flex flex-col gap-2 px-2 pb-2">
-                    <div className="flex justify-between items-start gap-2">
-                        <h3 onClick={onClick} className="font-montserrat font-semibold text-2xl leading-[29px] text-[#1B4712] flex-grow cursor-pointer break-words">
+                    <div className="flex justify-between items-end gap-2">
+                        <h3 onClick={onClick} className="font-montserrat font-semibold text-xl leading-7 text-[#1B4712] flex-grow cursor-pointer break-words">
                             {location.displayName.text}
                         </h3>
 
-                        <div className="flex flex-col space-y-2 flex-shrink-0">
+                        <div className="flex space-x-2 flex-shrink-0">
                             {onShareClick && (
                                 <button
                                     onClick={handleShare}
-                                    className="flex justify-center items-center w-9 h-9 bg-[#C9F0C2] rounded-[9px] hover:opacity-80 transition-opacity"
+                                    className="flex justify-center items-center w-8 h-8 bg-[#C9F0C2] rounded-[9px] hover:opacity-80 transition-opacity"
                                     aria-label="Share location"
                                 >
                                     <ShareLocationIcon className="w-5 h-5 text-[#1B4712]" />
@@ -65,7 +65,7 @@ const LocationListItem = React.forwardRef(({
                                 href={mapsUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex justify-center items-center w-9 h-9 bg-[#C9F0C2] rounded-[9px] hover:opacity-80 transition-opacity"
+                                className="flex justify-center items-center w-8 h-8 bg-[#C9F0C2] rounded-[9px] hover:opacity-80 transition-opacity"
                                 aria-label="Get directions"
                             >
                                 <DirectionsIcon />

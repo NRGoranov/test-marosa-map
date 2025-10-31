@@ -56,7 +56,7 @@ const SlideDownMenu = ({ isOpen, onClose, onBrochureClick, onHomeClick, menuVari
 
                             <div className="px-6 text-center">
                                 <a
-                                    href="https://marossa.bg/"
+                                    href="https://www.nedevbg.com/marosa-gradina"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center justify-center bg-[#266819] hover:bg-[#15380e] text-white rounded-full px-6 py-3.5 text-lg font-semibold transition-colors"

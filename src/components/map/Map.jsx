@@ -91,7 +91,7 @@ const Map = ({
         disableDefaultUI: true,
         zoomControl: false,
         clickableIcons: false,
-        minZoom: 7,
+        minZoom: 9,
         gestureHandling: 'greedy'
     }), []);
 
@@ -147,7 +147,7 @@ const Map = ({
 
                 <Data
                     onLoad={(data) => {
-                        data.addGeoJson(miniBulgarianBordersData);
+                        data.addGeoJson(onlyBordersData);
                         data.setStyle({
                             fillOpacity: 0,
                             strokeColor: '#1B4712',

@@ -120,15 +120,30 @@ function MarosaLocator() {
     }, [map, allCities]);
 
     const handleMapIdle = useCallback(() => {
-        if (!map || locations.length === 0) return;
+        if (!map || locations.length === 0) {
+            if (locations.length > 0) {
+                setVisibleLocations([]);
+            }
+
+            return;
+        }
+
         const bounds = map.getBounds();
+
         if (bounds) {
             const visible = locations.filter(loc =>
                 bounds.contains(loc.position)
             );
+
             setVisibleLocations(visible);
         }
     }, [map, locations]);
+
+    useEffect(() => {
+        if (map && locations.length > 0) {
+            handleMapIdle();
+        }
+    }, [locations, map, handleMapIdle]);
 
     const closeInfoWindow = useCallback(() => {
         setSelectedPlace(null);

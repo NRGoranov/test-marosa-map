@@ -46,7 +46,7 @@ const MenuSidebar = ({
                 <Divider />
 
                 <div className="px-6">
-                    <a href="https://marossa.bg/" target="_blank" rel="noopener noreferrer" className="h-20 text-lg font-medium text-[#1B4712] hover:text-green-600 inline-flex items-center w-full">
+                    <a href="https://www.nedevbg.com/marosa-gradina" target="_blank" rel="noopener noreferrer" className="h-20 text-lg font-medium text-[#1B4712] hover:text-green-600 inline-flex items-center w-full">
                         <SimpleExternalLinkIcon className="mr-3 w-5 h-5" />
 
                         <span>
