@@ -13,7 +13,8 @@ const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
 
     const photoUrl = location.imageUrl || 'https://i.imgur.com/g2a4JAh.png';
 
-    const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.displayName.text)}&query_place_id=${location.placeId}`;
+    const locationName = location.displayName?.text || location.name || '';
+    const mapsUrl = location.mapsUrl || (locationName ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName)}${location.placeId ? `&query_place_id=${location.placeId}` : ''}` : '#');
 
     const handleShare = (e) => {
         e.stopPropagation();
@@ -68,7 +69,14 @@ const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
                     </button>
                 )}
 
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors" aria-label="Get directions">
+                <a 
+                    href={mapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors" 
+                    aria-label="Get directions"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <DirectionsIcon />
                 </a>
             </div>

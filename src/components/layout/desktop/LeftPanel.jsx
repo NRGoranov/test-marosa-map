@@ -237,7 +237,7 @@ const LeftPanel = (props) => {
                     {renderResultsText(props.locations ? props.locations.length : 0)}
                 </p>
 
-                <div className="mt-4 p-1">
+                <div className="mt-4">
                     {props.isInitialLoading ? (
                         <p className="text-gray-500">Loading location details...</p>
                     ) : (

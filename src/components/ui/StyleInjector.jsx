@@ -67,27 +67,38 @@ const StyleInjector = () => (
         /* --- Styles for Custom Scrollbar --- */
         * {
             scrollbar-width: thin;
-            scrollbar-color: #BDBDBD #F7F7F7;
+            scrollbar-color: #6D7F69 #F9FFFA;
         }
 
-
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
+            height: 10px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #F7F7F7;
-            border-radius: 10px;
+            background: #F9FFFA;
+            border-radius: 12px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background-color: #BDBDBD;
-            border-radius: 10px;
-            border: 2px solid #F7F7F7;
+            background: linear-gradient(180deg, #6D7F69 0%, #7A8E74 100%);
+            border-radius: 12px;
+            border: 2px solid #F9FFFA;
+            transition: all 0.3s ease;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background-color: #888888;
+            background: linear-gradient(180deg, #1B4712 0%, #266819 100%);
+            border: 2px solid #EAF6E7;
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #15380E 0%, #1B4712 100%);
+        }
+
+        /* Horizontal scrollbar */
+        ::-webkit-scrollbar:horizontal {
+            height: 10px;
         }
 
         [data-rsbs-header] {

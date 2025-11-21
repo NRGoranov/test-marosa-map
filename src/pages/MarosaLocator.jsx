@@ -7,6 +7,7 @@ import DesktopView from '../components/layout/desktop/DesktopView';
 import MobileView from '../components/layout/mobile/MobileView';
 
 import StyleInjector from '../components/ui/StyleInjector';
+import LocationPermissionModal from '../components/ui/LocationPermissionModal';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
 import citiesData from '../data/filtered_cities_minified.json';
@@ -28,6 +29,8 @@ function MarosaLocator() {
     const [currentUserPosition, setCurrentUserPosition] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
     const [visibleLocations, setVisibleLocations] = useState([]);
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+    const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
 
     const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -87,20 +90,67 @@ function MarosaLocator() {
         loadData();
     }, []);
 
+    const requestLocation = useCallback(() => {
+        if (!map || !navigator.geolocation) return;
+        
+        setHasRequestedLocation(true);
+        setIsLocationModalOpen(false);
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                console.log("Geolocation Success! Position:", position.coords);
+                const userPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                setCurrentUserPosition(userPos);
+                map.panTo(userPos);
+                map.setZoom(15);
+            },
+            () => {
+                console.error("Geolocation permission denied or service failed.");
+            }
+        );
+    }, [map]);
+
+    const handleLocationAllow = useCallback(() => {
+        requestLocation();
+    }, [requestLocation]);
+
+    const handleLocationCancel = useCallback(() => {
+        setIsLocationModalOpen(false);
+        setHasRequestedLocation(true);
+    }, []);
+
     useEffect(() => {
-        if (isLoaded && map && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    console.log("Geolocation Success! Position:", position.coords);
-                    const userPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                    setCurrentUserPosition(userPos);
-                    map.panTo(userPos);
-                    map.setZoom(15);
-                },
-                () => console.error("Geolocation permission denied or service failed.")
-            );
+        if (isLoaded && map && navigator.geolocation && !hasRequestedLocation) {
+            // Small delay to ensure map is fully rendered
+            const timer = setTimeout(() => {
+                console.log('Checking location permission...');
+                // Check if permission was already granted
+                if (navigator.permissions) {
+                    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                        console.log('Permission state:', result.state);
+                        if (result.state === 'granted') {
+                            // Permission already granted, request location directly
+                            requestLocation();
+                        } else {
+                            // Show modal for prompt or denied state
+                            console.log('Showing location modal');
+                            setIsLocationModalOpen(true);
+                        }
+                    }).catch((error) => {
+                        console.log('Permissions API error, showing modal:', error);
+                        // Permissions API not supported or failed, show modal
+                        setIsLocationModalOpen(true);
+                    });
+                } else {
+                    console.log('Permissions API not supported, showing modal');
+                    // Permissions API not supported, show modal
+                    setIsLocationModalOpen(true);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timer);
         }
-    }, [isLoaded, map]);
+    }, [isLoaded, map, hasRequestedLocation, requestLocation]);
 
     const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
@@ -217,6 +267,11 @@ function MarosaLocator() {
                     onNavigateToBrochure={() => navigate('/brochure')}
                 />
             )}
+            <LocationPermissionModal
+                isOpen={isLocationModalOpen}
+                onAllow={handleLocationAllow}
+                onCancel={handleLocationCancel}
+            />
         </>
     );
 }
