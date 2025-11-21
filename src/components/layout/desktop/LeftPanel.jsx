@@ -5,24 +5,30 @@ import Header from './Header';
 import Footer from './Footer';
 import LocationList from '../location-list/LocationList';
 import DesktopShareModal from './DesktopShareModal';
+import SearchInput from '../../ui/SearchInput';
 
-import SearchIcon from '../../../assets/icons/SearchIcon';
+import { filterLocationsByQuery } from '../../../utils/searchUtils';
 
 const LeftPanel = (props) => {
     const [locationToShare, setLocationToShare] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState({ locations: [] });
+    const [searchResults, setSearchResults] = useState({ cities: [], locations: [] });
     const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
     const searchContainerRef = useRef(null);
     const allLocationsRef = useRef(props.allLocations);
+    const allCitiesRef = useRef(props.allCities);
 
     useEffect(() => {
         allLocationsRef.current = props.allLocations;
     }, [props.allLocations]);
 
     useEffect(() => {
-        setSearchResults({ locations: [] });
+        allCitiesRef.current = props.allCities;
+    }, [props.allCities]);
+
+    useEffect(() => {
+        setSearchResults({ cities: [], locations: [] });
 
         if (selectedSuggestion) {
            return; 
@@ -35,18 +41,15 @@ const LeftPanel = (props) => {
         }
 
         const currentAllLocations = allLocationsRef.current;
+        const currentAllCities = allCitiesRef.current;
 
-        if (!currentAllLocations) {
+        if (!currentAllLocations || !currentAllCities) {
             return;
         }
 
-        const lowerCaseSearchTerm = currentSearchTerm.toLocaleLowerCase('bg-BG'); 
-
-        const matchingLocations = currentAllLocations.filter(loc => {
-            return loc.displayName?.text && loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm);
-        });
-
-        setSearchResults({ locations: matchingLocations });
+        // Use shared search function to filter both cities and locations
+        const results = filterLocationsByQuery(currentSearchTerm, currentAllLocations, currentAllCities);
+        setSearchResults(results);
     }, [searchTerm, selectedSuggestion]); 
 
     useEffect(() => {
@@ -58,7 +61,7 @@ const LeftPanel = (props) => {
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setSearchTerm('');
 
-                setSearchResults({ locations: [] }); 
+                setSearchResults({ cities: [], locations: [] }); 
 
                 setSelectedSuggestion(null);
             }
@@ -76,12 +79,23 @@ const LeftPanel = (props) => {
         setSelectedSuggestion(null); 
     };
 
-    const handleSuggestionClick = (item) => {
-        const name = item.displayName.text;
+    const handleSuggestionClick = (item, type) => {
+        if (type === 'city') {
+            // Handle city click - trigger city select if callback exists
+            if (props.onCitySelect) {
+                props.onCitySelect(item.bulgarianName);
+            }
+            setSearchTerm('');
+            setSearchResults({ cities: [], locations: [] });
+            setSelectedSuggestion(null);
+        } else {
+            // Handle location click
+            const name = item.displayName.text;
 
-        setSearchTerm(name); 
+            setSearchTerm(name); 
 
-        setSelectedSuggestion({ type: 'location', data: item }); 
+            setSelectedSuggestion({ type: 'location', data: item }); 
+        }
     };
 
     const handleSearch = (event) => {
@@ -92,11 +106,16 @@ const LeftPanel = (props) => {
                 props.onListItemClick && props.onListItemClick(selectedSuggestion.data);
             }
         }
-        else if (searchTerm.trim() !== '' && searchResults.locations.length > 0) {
-            props.onListItemClick && props.onListItemClick(searchResults.locations[0]);
+        else if (searchTerm.trim() !== '' && (searchResults.cities.length > 0 || searchResults.locations.length > 0)) {
+            // Prefer locations over cities when submitting
+            if (searchResults.locations.length > 0) {
+                props.onListItemClick && props.onListItemClick(searchResults.locations[0]);
+            } else if (searchResults.cities.length > 0 && props.onCitySelect) {
+                props.onCitySelect(searchResults.cities[0].bulgarianName);
+            }
         }
  
-        setSearchResults({ locations: [] }); 
+        setSearchResults({ cities: [], locations: [] }); 
 
         setSelectedSuggestion(null); 
     };
@@ -147,7 +166,7 @@ const LeftPanel = (props) => {
         );
     };
 
-    const hasSearchResults = searchResults.locations.length > 0;
+    const hasSearchResults = searchResults.cities.length > 0 || searchResults.locations.length > 0;
 
     return (
         <div className="w-full md:w-1/3 flex flex-col h-screen bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.04)] z-10 p-8 relative left-panel-container">
@@ -171,27 +190,41 @@ const LeftPanel = (props) => {
 
                     <section className="mt-8" ref={searchContainerRef}>
                         <form onSubmit={handleSearch} className="flex items-center space-x-4">
-                            
                             <div className="relative flex-grow">
-
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <SearchIcon />
-                                </div>
-
-                                <input
-                                    type="text"
-                                    name="search"
-                                    id="search"
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-[14px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#1B4712]/20 focus:border-[#1B4712] sm:text-sm bg-white transition-all"
-                                    placeholder="Търси обекти..." 
+                                <SearchInput
                                     value={searchTerm}
                                     onChange={handleSearchChange}
-                                    autoComplete="off"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-[14px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#1B4712]/20 focus:border-[#1B4712] sm:text-sm bg-white transition-all"
+                                    iconClassName="pl-3"
                                 />
 
                                 {searchTerm && hasSearchResults && !selectedSuggestion && (
                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-30 max-h-80 overflow-y-auto search-dropdown">
                                         <div className="divide-y divide-gray-100">
+                                            {searchResults.cities.length > 0 && (
+                                                <div className="p-2">
+                                                    <h4 className="text-xs font-semibold text-gray-500 uppercase px-3 pt-1 pb-1">
+                                                        Градове
+                                                    </h4>
+
+                                                    <ul>
+                                                        {searchResults.cities.map((city) => (
+                                                            <li
+                                                                key={city.englishName}
+                                                                className="p-3 hover:bg-green-50 cursor-pointer rounded-md text-gray-800 flex items-center"
+                                                                onMouseDown={() => handleSuggestionClick(city, 'city')}
+                                                            >
+                                                                <CityIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
+
+                                                                <span>
+                                                                    {city.bulgarianName}
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
                                             {searchResults.locations.length > 0 && (
                                                 <div className="p-2">
                                                     <h4 className="text-xs font-semibold text-gray-500 uppercase px-3 pt-1 pb-1">
@@ -203,7 +236,7 @@ const LeftPanel = (props) => {
                                                             <li
                                                                 key={loc.place_id || loc.displayName.text}
                                                                 className="p-3 hover:bg-green-50 cursor-pointer rounded-md text-gray-800 flex items-center"
-                                                                onMouseDown={() => handleSuggestionClick(loc)}
+                                                                onMouseDown={() => handleSuggestionClick(loc, 'location')}
                                                             >
                                                                 <CityIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
 

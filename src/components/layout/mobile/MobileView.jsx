@@ -8,7 +8,8 @@ import SlideDownMenu from '../../ui/SlideDownMenu';
 import LocationList from '../location-list/LocationList';
 import MobileShareModal from './MobileShareModal';
 import SearchResults from './SearchResults';
-import SearchIcon from '../../../assets/icons/SearchIcon';
+import SearchInput from '../../ui/SearchInput';
+import { filterLocationsByQuery } from '../../../utils/searchUtils';
 
 const MobileView = (props) => {
     const {
@@ -34,34 +35,9 @@ const MobileView = (props) => {
     const sheetRef = useRef();
 
     useEffect(() => {
-        if (searchTerm.trim() === '') {
-            setSearchResults({ cities: [], locations: [] });
-
-            return;
-        }
-        const isCyrillic = /[а-яА-Я]/.test(searchTerm);
-
-        const lowerCaseSearchTerm = searchTerm.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US');
-
-        const matchingCities = allCities.filter(city => {
-            const nameToSearch = isCyrillic ? city.bulgarianName : city.englishName;
-
-            return nameToSearch.toLocaleLowerCase(isCyrillic ? 'bg-BG' : 'en-US').includes(lowerCaseSearchTerm);
-        });
-
-        const startsWithMatches = allLocations.filter(loc =>
-            loc.displayName?.text && loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
-        );
-
-        const includesMatches = allLocations.filter(loc =>
-            loc.displayName?.text &&
-            loc.displayName.text.toLocaleLowerCase('bg-BG').includes(lowerCaseSearchTerm) &&
-            !loc.displayName.text.toLocaleLowerCase('bg-BG').startsWith(lowerCaseSearchTerm)
-        );
-
-        const matchingLocations = [...startsWithMatches, ...includesMatches];
-
-        setSearchResults({ cities: matchingCities, locations: matchingLocations });
+        // Use shared search function for consistency
+        const results = filterLocationsByQuery(searchTerm, allLocations, allCities);
+        setSearchResults(results);
     }, [searchTerm, allLocations, allCities]);
 
     useEffect(() => {
@@ -182,34 +158,28 @@ const MobileView = (props) => {
             return (
                 <div className="p-4 border-b border-gray-200 flex-shrink-0 z-20 flex items-center gap-10 bg-white">
                     <div className="relative flex-grow">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <SearchIcon />
-                        </div>
-
-                        <input
-                            type="text"
+                        <SearchInput
                             value={searchTerm}
                             onChange={handleSearchChange}
                             autoFocus={true}
-                            placeholder="Търси обекти..."
                             className="w-full bg-gray-100 rounded-full pl-12 pr-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#1B4712]"
-                        />
-
-                        <button
-                            onClick={searchTerm ? () => setSearchTerm('') : toggleSearchMode}
-                            onMouseDown={(e) => e.preventDefault()}
-                            className="absolute inset-y-0 right-0 pr-4 flex items-center"
                         >
-                            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                            <button
+                                onClick={searchTerm ? () => setSearchTerm('') : toggleSearchMode}
+                                onMouseDown={(e) => e.preventDefault()}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                            >
+                                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
 
-                        {searchTerm && (
-                            <SearchResults
-                                results={searchResults}
-                                onCityClick={handleCityClick}
-                                onLocationClick={handleLocationClick}
-                            />
-                        )}
+                            {searchTerm && (
+                                <SearchResults
+                                    results={searchResults}
+                                    onCityClick={handleCityClick}
+                                    onLocationClick={handleLocationClick}
+                                />
+                            )}
+                        </SearchInput>
                     </div>
                 </div>
             );
