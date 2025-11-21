@@ -94,8 +94,8 @@ const LocationListItem = React.forwardRef(({
     return (
         <article
             ref={ref}
-            className={`group relative rounded-3xl bg-white border border-[#E4F1DF] shadow-[0_20px_60px_rgba(27,71,18,0.08)] transition-all duration-300 overflow-hidden ${
-                !isMobileView && (isSelected || isHovered) ? 'ring-2 ring-[#1B4712]/30 shadow-[0_25px_80px_rgba(27,71,18,0.15)] translate-y-[-4px]' : 'hover:shadow-[0_25px_80px_rgba(27,71,18,0.12)] hover:-translate-y-1'
+            className={`group relative ${isMobileView ? 'rounded-[36px]' : 'rounded-[18px]'} bg-white border border-[#E4F1DF] ${isMobileView ? 'shadow-[0_18px_60px_rgba(0,0,0,0.12)]' : 'shadow-[0_2px_8px_rgba(0,0,0,0.05)]'} transition-all ${isMobileView ? 'duration-300' : 'duration-[120ms] ease-out'} overflow-hidden ${
+                !isMobileView && (isSelected || isHovered) ? 'ring-2 ring-[#1B4712]/30 shadow-[0_4px_12px_rgba(27,71,18,0.1)] translate-y-[-2px]' : !isMobileView ? 'hover:shadow-[0_4px_12px_rgba(27,71,18,0.08)] hover:-translate-y-[2px]' : ''
             }`}
             onMouseOver={onMouseOver}
             onMouseOut={onMouseOut}
@@ -112,31 +112,31 @@ const LocationListItem = React.forwardRef(({
                     loading="lazy"
                 />
                 {/* Action Buttons Overlay */}
-                <div className="absolute top-4 right-4 flex gap-2">
+                <div className={`absolute top-4 right-4 flex ${isMobileView ? 'gap-3' : 'gap-3'}`}>
                     {onShareClick && (
                         <button
                             onClick={handleShare}
-                            className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-all hover:scale-110"
+                            className={`${isMobileView ? 'w-12 h-12' : 'w-11 h-11'} rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-all hover:scale-110 group/icon`}
                             aria-label="Share location"
                         >
-                            <ShareLocationIcon className="w-5 h-5 text-[#1B4712]" />
+                            <ShareLocationIcon className={`${isMobileView ? 'w-5 h-5' : 'w-[22px] h-[22px]'} text-[#1B4712] transition-colors group-hover/icon:text-[#15380E]`} />
                         </button>
                     )}
                     <a
                         href={mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full bg-[#1B4712] flex items-center justify-center shadow-lg hover:bg-[#15380E] transition-all hover:scale-110"
+                        className={`${isMobileView ? 'w-12 h-12' : 'w-11 h-11'} rounded-full bg-[#1B4712] flex items-center justify-center shadow-lg hover:bg-[#15380E] transition-all hover:scale-110 group/icon`}
                         aria-label="Get directions"
                         onClick={(event) => event.stopPropagation()}
                     >
-                        <DirectionsIcon fill="#AFE8A4" className="w-5 h-5" />
+                        <DirectionsIcon fill="#AFE8A4" className={`${isMobileView ? 'w-5 h-5' : 'w-[22px] h-[22px]'}`} />
                     </a>
                 </div>
             </div>
 
             {/* Content Section */}
-            <div className="bg-white p-6 space-y-4 min-w-0 overflow-hidden">
+            <div className={`bg-white ${isMobileView ? 'p-4' : 'px-6 pt-6 pb-7'} space-y-4 min-w-0 overflow-hidden`}>
                 {/* Store Name */}
                 <h3
                     onClick={onClick}

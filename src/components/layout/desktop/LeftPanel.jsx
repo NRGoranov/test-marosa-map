@@ -131,16 +131,16 @@ const LeftPanel = (props) => {
 
     const renderResultsText = (count) => {
         if (count === 0) {
-            return <span className="font-light text-gray-500">Няма намерени резултати</span>;
+            return <span>Няма намерени резултати</span>;
         }
 
         return (
             <>
-                <span className="font-bold text-gray-800">
+                <span className="font-semibold text-gray-600">
                     {count}
                 </span>
 
-                <span className="font-light text-gray-500">
+                <span className="text-gray-500">
                     {count === 1 ? ' намерен резултат' : ' намерени резултата'}
                 </span>
             </>
@@ -150,7 +150,7 @@ const LeftPanel = (props) => {
     const hasSearchResults = searchResults.locations.length > 0;
 
     return (
-        <div className="w-full md:w-1/3 flex flex-col h-screen bg-white shadow-lg z-10 p-8">
+        <div className="w-full md:w-1/3 flex flex-col h-screen bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.04)] z-10 p-8 relative left-panel-container">
             <div className="flex-shrink-0">
                 <Header />
 
@@ -182,7 +182,7 @@ const LeftPanel = (props) => {
                                     type="text"
                                     name="search"
                                     id="search"
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-[14px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#1B4712]/20 focus:border-[#1B4712] sm:text-sm bg-white transition-all"
                                     placeholder="Търси обекти..." 
                                     value={searchTerm}
                                     onChange={handleSearchChange}
@@ -232,12 +232,18 @@ const LeftPanel = (props) => {
                 </div>
             </div>
 
-            <div className="flex-grow overflow-y-auto mt-8 pt-2 pr-2 -mr-4">
-                <p className="text-lg">
-                    {renderResultsText(props.locations ? props.locations.length : 0)}
-                </p>
+            {/* Results Count Header - Fixed */}
+            <div className="flex-shrink-0 mt-8 px-2 py-2">
+                <div className="flex justify-end">
+                    <p className="text-sm text-gray-500">
+                        {renderResultsText(props.locations ? props.locations.length : 0)}
+                    </p>
+                </div>
+            </div>
 
-                <div className="mt-4">
+            {/* Scrollable Card List */}
+            <div className="flex-1 overflow-y-auto pt-2 pl-2 pr-2 -mr-4 left-panel-scroll rounded-[18px] relative min-h-0">
+                <div>
                     {props.isInitialLoading ? (
                         <p className="text-gray-500">Loading location details...</p>
                     ) : (
