@@ -5,7 +5,7 @@ import LocationListItem from './location-list-item/LocationListItem';
 const LocationList = (props) => {
     const wrapperClasses = props.isMobileView
         ? "flex flex-col gap-4 min-w-0"
-        : "grid grid-cols-2 gap-6 min-w-0";
+        : "grid grid-cols-2 gap-12 px-12 min-w-0";
 
     return (
         <div className={wrapperClasses}>

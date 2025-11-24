@@ -8,7 +8,7 @@ import SlideDownMenu from '../../ui/SlideDownMenu';
 import LocationList from '../location-list/LocationList';
 import MobileShareModal from './MobileShareModal';
 import SearchResults from './SearchResults';
-import SearchInput from '../../ui/SearchInput';
+import SearchIcon from '../../../assets/icons/SearchIcon';
 import { filterLocationsByQuery } from '../../../utils/searchUtils';
 
 const MobileView = (props) => {
@@ -158,28 +158,34 @@ const MobileView = (props) => {
             return (
                 <div className="p-4 border-b border-gray-200 flex-shrink-0 z-20 flex items-center gap-10 bg-white">
                     <div className="relative flex-grow">
-                        <SearchInput
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <SearchIcon />
+                        </div>
+
+                        <input
+                            type="text"
                             value={searchTerm}
                             onChange={handleSearchChange}
                             autoFocus={true}
+                            placeholder="Потърси Мароса обекти..."
                             className="w-full bg-gray-100 rounded-full pl-12 pr-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#1B4712]"
-                        >
-                            <button
-                                onClick={searchTerm ? () => setSearchTerm('') : toggleSearchMode}
-                                onMouseDown={(e) => e.preventDefault()}
-                                className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                            >
-                                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                        />
 
-                            {searchTerm && (
-                                <SearchResults
-                                    results={searchResults}
-                                    onCityClick={handleCityClick}
-                                    onLocationClick={handleLocationClick}
-                                />
-                            )}
-                        </SearchInput>
+                        <button
+                            onClick={searchTerm ? () => setSearchTerm('') : toggleSearchMode}
+                            onMouseDown={(e) => e.preventDefault()}
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                        >
+                            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+
+                        {searchTerm && (
+                            <SearchResults
+                                results={searchResults}
+                                onCityClick={handleCityClick}
+                                onLocationClick={handleLocationClick}
+                            />
+                        )}
                     </div>
                 </div>
             );

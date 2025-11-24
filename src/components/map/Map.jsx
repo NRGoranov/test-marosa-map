@@ -1,19 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { GoogleMap, Marker, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
 
-import DesktopShareModal from '../layout/desktop/DesktopShareModal';
+import CustomInfoWindowCard from './CustomInfoWindowCard';
+import CustomZoomControl from './map-buttons/CustomZoomControl';
 
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtils';
 
-import CustomInfoWindowCard from './CustomInfoWindowCard';
-import CustomZoomControl from './map-buttons/CustomZoomControl';
-
 import { mapStyles } from './mapStyles';
 
-import onlyBordersData from '../../data/bulgaria-border.json';
-import miniBulgarianBordersData from '../../data/bulgarian-provinces-borders.json';
-import fullBulgarianBordersData from '../../data/bulgarian-cities-borders.json';
+import borderData from '../../data/bulgaria-border.json';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
 
@@ -45,7 +41,6 @@ const clusterStyles = [
 
 const calculator = (markers, numStyles) => {
     const count = markers.length;
-
     let index = 0;
 
     if (count >= 6) {
@@ -74,13 +69,11 @@ const Map = ({
     onMarkerHover,
     onIdle,
     onMapClick,
+    onShareClick,
 }) => {
     const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
-
     const isDesktop = useMediaQuery('(min-width: 768px)');
-
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [locationToShare, setLocationToShare] = useState(null);
 
     const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
@@ -91,25 +84,9 @@ const Map = ({
         disableDefaultUI: true,
         zoomControl: false,
         clickableIcons: false,
-        minZoom: 9,
+        minZoom: 7,
         gestureHandling: 'greedy'
     }), []);
-
-    const handleShareClick = (location) => {
-        const name = location.displayName?.text;
-
-        const finalMapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${location.placeId}`;
-
-        const comprehensiveLocationData = {
-            ...location,
-            name: name,
-            displayName: { text: name },
-            rating: 5,
-            mapsUrl: finalMapsUrl
-        };
-
-        setLocationToShare(comprehensiveLocationData);
-    };
 
     const baseWrapperStyle = {
         position: 'relative',
@@ -147,7 +124,7 @@ const Map = ({
 
                 <Data
                     onLoad={(data) => {
-                        data.addGeoJson(onlyBordersData);
+                        data.addGeoJson(borderData);
                         data.setStyle({
                             fillOpacity: 0,
                             strokeColor: '#1B4712',
@@ -204,11 +181,7 @@ const Map = ({
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
-                        <CustomInfoWindowCard
-                            location={selectedPlace}
-                            onClose={onCloseInfoWindow}
-                            onShareClick={handleShareClick}
-                        />
+                        <CustomInfoWindowCard location={selectedPlace} onClose={onCloseInfoWindow} onShareClick={onShareClick} />
                     </InfoWindow>
                 )}
             </GoogleMap>
@@ -220,12 +193,6 @@ const Map = ({
                     onToggleFullscreen={toggleFullscreen}
                 />
             )}
-
-            <DesktopShareModal
-                isOpen={locationToShare}
-                onClose={() => setLocationToShare(null)}
-                place={locationToShare}
-            />
         </div>
     );
 };

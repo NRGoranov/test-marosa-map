@@ -8,6 +8,7 @@ import MobileView from '../components/layout/mobile/MobileView';
 
 import StyleInjector from '../components/ui/StyleInjector';
 import LocationPermissionModal from '../components/ui/LocationPermissionModal';
+import DesktopShareModal from '../components/layout/desktop/DesktopShareModal';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
 import citiesData from '../data/filtered_cities_minified.json';
@@ -31,6 +32,7 @@ function MarosaLocator() {
     const [visibleLocations, setVisibleLocations] = useState([]);
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
+    const [locationToShare, setLocationToShare] = useState(null);
 
     const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -201,11 +203,13 @@ function MarosaLocator() {
     }, []);
 
     const handleMapClick = useCallback(() => {
-        if (markerClickRef.current) {
+        // Use setTimeout to allow the marker click event to complete first
+        setTimeout(() => {
+            if (!markerClickRef.current) {
+                closeInfoWindow();
+            }
             markerClickRef.current = false;
-            return;
-        }
-        closeInfoWindow();
+        }, 0);
     }, [closeInfoWindow]);
 
     const handleMarkerClick = useCallback((place) => {
@@ -222,7 +226,38 @@ function MarosaLocator() {
             setSelectedPlace(place);
             setPlaceDetails(place);
         }
+        
+        // Reset the ref after a short delay to allow proper click detection
+        setTimeout(() => {
+            markerClickRef.current = false;
+        }, 100);
     }, [map, selectedPlace]);
+
+    const handleShareClick = useCallback((location) => {
+        const name = location.displayName?.text;
+        const lat = location.geometry?.location?.lat ? location.geometry.location.lat() : location.lat;
+        const lng = location.geometry?.location?.lng ? location.geometry.location.lng() : location.lng;
+
+        let finalMapsUrl = '';
+
+        if (location.place_id) {
+            finalMapsUrl = `https://www.google.com/maps/place/?q=place_id:${location.place_id}`;
+        } else if (lat && lng) {
+            finalMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        } else if (name) {
+            finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+        }
+
+        const comprehensiveLocationData = {
+            ...location,
+            name: name,
+            displayName: { text: name },
+            rating: 5,
+            mapsUrl: finalMapsUrl
+        };
+
+        setLocationToShare(comprehensiveLocationData);
+    }, []);
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
@@ -260,7 +295,7 @@ function MarosaLocator() {
 
             <StyleInjector />
             {isDesktop ? (
-                <DesktopView {...viewProps} />
+                <DesktopView {...viewProps} onShareClick={handleShareClick} />
             ) : (
                 <MobileView
                     {...viewProps}
@@ -271,6 +306,11 @@ function MarosaLocator() {
                 isOpen={isLocationModalOpen}
                 onAllow={handleLocationAllow}
                 onCancel={handleLocationCancel}
+            />
+            <DesktopShareModal
+                isOpen={!!locationToShare}
+                onClose={() => setLocationToShare(null)}
+                place={locationToShare}
             />
         </>
     );

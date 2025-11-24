@@ -94,8 +94,8 @@ const LocationListItem = React.forwardRef(({
     return (
         <article
             ref={ref}
-            className={`group relative ${isMobileView ? 'rounded-[36px]' : 'rounded-[18px]'} bg-white border border-[#E4F1DF] ${isMobileView ? 'shadow-[0_18px_60px_rgba(0,0,0,0.12)]' : 'shadow-[0_2px_8px_rgba(0,0,0,0.05)]'} transition-all ${isMobileView ? 'duration-300' : 'duration-[120ms] ease-out'} overflow-hidden ${
-                !isMobileView && (isSelected || isHovered) ? 'ring-2 ring-[#1B4712]/30 shadow-[0_4px_12px_rgba(27,71,18,0.1)] translate-y-[-2px]' : !isMobileView ? 'hover:shadow-[0_4px_12px_rgba(27,71,18,0.08)] hover:-translate-y-[2px]' : ''
+            className={`group relative ${isMobileView ? 'rounded-[36px]' : 'rounded-2xl rounded-tr-[80px]'} bg-white transition-all duration-200 ease-out overflow-hidden ${
+                !isMobileView && (isSelected || isHovered) ? 'border border-gray-200 shadow-lg' : 'border border-transparent'
             }`}
             onMouseOver={onMouseOver}
             onMouseOut={onMouseOut}
@@ -103,57 +103,60 @@ const LocationListItem = React.forwardRef(({
             {/* Image Section */}
             <div
                 onClick={onClick}
-                className="relative w-full h-[220px] overflow-hidden cursor-pointer"
+                className="relative w-full h-[180px] overflow-hidden cursor-pointer"
             >
                 <img
                     src={photoUrl}
                     alt={location.displayName?.text}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                 />
-                {/* Action Buttons Overlay */}
-                <div className={`absolute top-4 right-4 flex ${isMobileView ? 'gap-3' : 'gap-3'}`}>
+                
+
+            </div>
+
+            {/* Content Section */}
+            <div className={`bg-white ${isMobileView ? 'p-4' : 'p-4'} space-y-3 min-w-0 relative`}>
+                {/* Action Buttons - Top Right of Content */}
+                <div className="absolute top-4 right-4 flex gap-2 z-10">
                     {onShareClick && (
                         <button
                             onClick={handleShare}
-                            className={`${isMobileView ? 'w-12 h-12' : 'w-11 h-11'} rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-all hover:scale-110 group/icon`}
+                            className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-all hover:scale-105"
                             aria-label="Share location"
                         >
-                            <ShareLocationIcon className={`${isMobileView ? 'w-5 h-5' : 'w-[22px] h-[22px]'} text-[#1B4712] transition-colors group-hover/icon:text-[#15380E]`} />
+                            <ShareLocationIcon className="w-5 h-5 text-[#1B4712]" />
                         </button>
                     )}
                     <a
                         href={mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`${isMobileView ? 'w-12 h-12' : 'w-11 h-11'} rounded-full bg-[#1B4712] flex items-center justify-center shadow-lg hover:bg-[#15380E] transition-all hover:scale-110 group/icon`}
+                        className="w-10 h-10 rounded-xl bg-[#C9F0C2] flex items-center justify-center shadow-sm hover:bg-[#b3e6ac] transition-all hover:scale-105"
                         aria-label="Get directions"
                         onClick={(event) => event.stopPropagation()}
                     >
-                        <DirectionsIcon fill="#AFE8A4" className={`${isMobileView ? 'w-5 h-5' : 'w-[22px] h-[22px]'}`} />
+                        <DirectionsIcon fill="#1B4712" className="w-5 h-5" />
                     </a>
                 </div>
-            </div>
 
-            {/* Content Section */}
-            <div className={`bg-white ${isMobileView ? 'p-4' : 'px-6 pt-6 pb-7'} space-y-4 min-w-0 overflow-hidden`}>
                 {/* Store Name */}
                 <h3
                     onClick={onClick}
-                    className="font-bold text-2xl text-[#1B4712] font-['Montserrat',sans-serif] leading-tight cursor-pointer break-words line-clamp-2"
+                    className="font-bold text-[18px] text-[#1B4712] font-['Montserrat',sans-serif] leading-tight cursor-pointer break-words line-clamp-2 pr-24"
                 >
                     {location.displayName?.text}
                 </h3>
 
                 {/* Rating */}
-                <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-[#1B4712]">{ratingValue.toFixed(1)}</span>
-                    <StarRating rating={ratingValue} starSize="text-base" />
+                <div className="flex items-center gap-1">
+                    <span className="text-sm font-bold text-[#1B4712]">{ratingValue.toFixed(1)}</span>
+                    <StarRating rating={ratingValue} starSize="text-xs" />
                 </div>
 
                 {/* Status */}
-                <div className="flex items-center gap-2 text-base">
-                    <span className={`font-semibold ${status.isOpen ? 'text-[#1B4712]' : 'text-[#9C2E18]'}`}>
+                <div className="flex items-center gap-2 text-sm">
+                    <span className={`font-bold ${status.isOpen ? 'text-[#1B4712]' : 'text-[#9C2E18]'}`}>
                         {status.statusText}
                     </span>
                     {status.detailText && (
