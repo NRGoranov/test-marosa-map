@@ -23,7 +23,7 @@ const SearchInput = ({
 }) => {
     return (
         <>
-            <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none ${iconClassName}`}>
+            <div className={`absolute inset-y-0 left-0 flex items-center pointer-events-none ${iconClassName}`}>
                 <SearchIcon />
             </div>
             
@@ -42,4 +42,3 @@ const SearchInput = ({
 };
 
 export default SearchInput;
-

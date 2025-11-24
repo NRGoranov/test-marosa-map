@@ -5,5 +5,4 @@
 /**
  * Placeholder text for search input fields (Bulgarian)
  */
-export const SEARCH_PLACEHOLDER_BG = "Търси обекти или градове";
-
+export const SEARCH_PLACEHOLDER_BG = "Потърси Мароса обекти...";

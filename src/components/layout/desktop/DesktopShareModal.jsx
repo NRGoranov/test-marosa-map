@@ -6,6 +6,7 @@ import StarRating from '../../../assets/StarRating';
 import { checkIfOpen } from '../../../utils/timeUtils';
 import FacebookIcon from '../../../assets/icons/FacebookIcon';
 import InstagramIcon from '../../../assets/icons/InstagramIcon';
+import TikTokIcon from '../../../assets/icons/TikTokIcon';
 
 const DesktopShareModal = ({ isOpen, onClose, place }) => {
     const [isCopied, setIsCopied] = useState(false);
@@ -30,6 +31,11 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
 
     // Construct the maps URL from various possible sources
     const getMapsUrl = () => {
+        // Early return if place is null or undefined
+        if (!place) {
+            return '';
+        }
+        
         console.log('Getting maps URL from place:', place);
         
         // First check if mapsUrl is already provided
@@ -188,88 +194,60 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
     const locationName = place?.name || place?.displayName?.text || 'Мароса Градина';
     const shareText = `Разгледайте: ${locationName}`;
 
-    const shareOptions = [];
-    
-    // Always add copy button
-    shareOptions.push({
-        name: isCopied ? 'Копирано!' : 'Копирай линка', 
-        icon: <FiCopy size={20} />, 
-        action: handleCopy,
-        isCopied: isCopied 
-    });
-    
-    // Add WhatsApp if URL exists (use web version on desktop)
-    if (googleMapsUrl) {
-        shareOptions.push({
-            name: 'WhatsApp', 
-            icon: <FaWhatsapp size={20} />, 
-            href: `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`
-        });
-    }
-    
-    // Add Facebook if URL exists
-    if (googleMapsUrl) {
-        shareOptions.push({
+    // Reorganized share options in the requested order
+    const shareOptions = [
+        // Row 1: Copy, Facebook, Instagram
+        {
+            name: isCopied ? 'Копирано!' : 'Копирай линка', 
+            icon: <FiCopy size={14} />, 
+            action: handleCopy,
+            isCopied: isCopied 
+        },
+        {
             name: 'Facebook', 
             icon: <FacebookIcon className="w-5 h-5 text-[#1B4712]" />, 
-            href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareText)}`
-        });
-    }
-    
-    // Add Messenger if URL exists (use web version on desktop)
-    if (googleMapsUrl) {
-        shareOptions.push({
+            href: googleMapsUrl ? `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareText)}` : '#'
+        },
+        {
+            name: 'Instagram', 
+            icon: <InstagramIcon className="w-5 h-5 text-[#1B4712]" />, 
+            href: 'https://www.instagram.com/marosagradina?igsh=MXhld2tjd2hyaWphag=='
+        },
+        // Row 2: Messenger, Viber, TikTok
+        {
             name: 'Messenger', 
-            icon: <FaFacebookMessenger size={20} />, 
-            href: `https://www.facebook.com/dialog/send?link=${encodedUrl}&app_id=123456789`
-        });
-    }
-    
-    // Add X/Twitter if URL exists
-    if (googleMapsUrl) {
-        shareOptions.push({
-            name: 'X (Twitter)', 
-            icon: <FaTwitter size={20} />, 
-            href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(shareText)}`
-        });
-    }
-    
-    // Add Viber if URL exists (use web version on desktop)
-    if (googleMapsUrl) {
-        shareOptions.push({
+            icon: <FaFacebookMessenger size={18} className="text-[#1B4712]" />, 
+            href: googleMapsUrl ? `https://www.facebook.com/dialog/send?link=${encodedUrl}&app_id=123456789` : '#'
+        },
+        {
             name: 'Viber', 
-            icon: <FaViber size={20} />, 
-            href: `https://invite.viber.com/?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`
-        });
-    }
-    
-    // Add Email if URL exists
-    if (googleMapsUrl) {
-        shareOptions.push({
+            icon: <FaViber size={18} className="text-[#1B4712]" />, 
+            href: googleMapsUrl ? `https://invite.viber.com/?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}` : '#'
+        },
+        {
+            name: 'TikTok', 
+            icon: <TikTokIcon className="w-5 h-5 text-[#1B4712]" />, 
+            href: 'https://www.tiktok.com/@nedev.bg?_t=ZN-8xUznEkh4Mg'
+        },
+        // Row 3: Email
+        {
             name: 'Email', 
-            icon: <FiMail size={20} />, 
-            href: `mailto:?subject=${encodeURIComponent('Упътване до ' + locationName)}&body=${encodeURIComponent(shareText + '\n\n' + googleMapsUrl)}`
-        });
-    }
-    
-    // Always add Instagram (static link)
-    shareOptions.push({
-        name: 'Instagram', 
-        icon: <InstagramIcon className="w-5 h-5 text-[#1B4712]" />, 
-        href: 'https://www.instagram.com/marosagradina?igsh=MXhld2tjd2hyaWphag=='
-    });
+            icon: <FiMail size={14} />, 
+            href: googleMapsUrl ? `mailto:?subject=${encodeURIComponent('Упътване до ' + locationName)}&body=${encodeURIComponent(shareText + '\n\n' + googleMapsUrl)}` : '#'
+        }
+    ];
 
     const ShareOptionCard = ({ option }) => {
         const isCopyButton = option.isCopied !== undefined;
-        const baseClasses = `group flex items-center gap-3 rounded-3xl border px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left transition-all duration-300 hover:shadow-[0_15px_40px_rgba(27,71,18,0.12)] hover:-translate-y-1 cursor-pointer ${
+        const baseClasses = `group flex items-center gap-3 rounded-xl rounded-tr-[40px] border px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left transition-all duration-300 hover:shadow-[0_15px_40px_rgba(27,71,18,0.12)] hover:-translate-y-1 cursor-pointer ${
             isCopyButton && option.isCopied 
                 ? 'border-[#1B4712] bg-[#EAF6E7]' 
                 : 'border-[#E6F2E2] bg-white hover:border-[#C9F0C2]'
         }`;
-        const iconClasses = `w-10 h-10 rounded-2xl flex items-center justify-center text-[#1B4712] transition-all duration-300 group-hover:scale-110 ${
+        const iconClasses = `w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
             isCopyButton && option.isCopied 
-                ? 'bg-[#C9F0C2]' 
-                : 'bg-[#EAF6E7] group-hover:bg-[#C9F0C2]'
+                ? 'bg-[#C9F0C2] text-[#1B4712]' 
+                : 'bg-[#C9F0C2] text-[#1B4712] group-hover:bg-[#b3e6ac]'
         }`;
         const textClasses = `text-sm font-semibold transition-colors duration-300 ${
             isCopyButton && option.isCopied 
@@ -331,20 +309,21 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-md p-6 space-y-5"
+                className="bg-white rounded-[40px] rounded-tr-[120px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5"
                 onClick={(event) => event.stopPropagation()}
             >
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.4em] text-[#6D7F69]">Share</p>
-                        <h2 className="text-2xl font-semibold text-[#1B4712]">Сподели този обект</h2>
-                    </div>
-                    <button onClick={onClose} className="text-[#1B4712] hover:opacity-70 transition-opacity">
-                        <FiX size={24} />
+                <div className="flex items-center">
+                    <h2 className="text-4xl font-bold text-[#1B4712] whitespace-nowrap">Сподели този обект</h2>
+                    <button 
+                        onClick={onClose} 
+                        className="ml-50 w-5 h-5 rounded-lg border border-gray-300 bg-transparent flex items-center justify-center text-[#1B4712] hover:bg-gray-50 transition-colors"
+                        aria-label="Close"
+                    >
+                        <FiX size={16} />
                     </button>
                 </div>
 
-                <div className="flex gap-4 rounded-[28px] border border-[#E6F2E2] bg-[#F9FFFA] p-4">
+                <div className="flex gap-4 border-b border-[#E6F2E2] pb-4">
                     {imageUrl && (
                         <img
                             src={imageUrl}
@@ -354,11 +333,11 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
                         />
                     )}
                     <div className="space-y-1 min-w-0 flex-1">
-                        <h3 className="text-lg font-semibold text-[#1B4712] break-words">{place.name || place.displayName?.text}</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-[#1B4712] font-semibold">{ratingValue.toFixed(1)}</span>
                             <StarRating rating={ratingValue} starSize="text-sm" />
                         </div>
+                        <h3 className="text-lg font-semibold text-[#1B4712] break-words">{place.name || place.displayName?.text}</h3>
                         <p className="text-sm font-medium">
                             <span className={openingHoursInfo.color}>{openingHoursInfo.statusText}</span>
                             {openingHoursInfo.detailText && (
@@ -368,7 +347,7 @@ const DesktopShareModal = ({ isOpen, onClose, place }) => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-y-6 gap-x-3">
                     {shareOptions.map((option) => (
                         <ShareOptionCard key={option.name} option={option} />
                     ))}
