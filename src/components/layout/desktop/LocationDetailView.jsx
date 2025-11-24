@@ -5,14 +5,13 @@ import { checkIfOpen } from '../../../utils/timeUtils';
 import DirectionsIcon from '../../../assets/icons/DirectionsIcon';
 
 const LocationDetailView = ({ location, onClose }) => {
-    if (!location) {
+    if (!placeDetails) {
         return <div className="p-4 text-center">Loading details...</div>;
     }
 
     const status = checkIfOpen(location);
     const photoUrl = location.imageUrl || 'https://i.imgur.com/g2a4JAh.png';
-    const locationName = location.displayName?.text || location.name || '';
-    const mapsUrl = location.mapsUrl || (locationName ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName)}${location.placeId ? `&query_place_id=${location.placeId}` : ''}` : '#');
+    const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.displayName.text)}&query_place_id=${location.placeId}`;
 
     return (
         <div className="p-12.5">
@@ -32,7 +31,6 @@ const LocationDetailView = ({ location, onClose }) => {
                         rel="noopener noreferrer"
                         className="flex-shrink-0 flex justify-center items-center w-9 h-9 bg-[#C9F0C2] rounded-lg hover:opacity-80 transition-opacity"
                         aria-label="Get directions"
-                        onClick={(e) => e.stopPropagation()}
                     >
                         <DirectionsIcon />
                     </a>
