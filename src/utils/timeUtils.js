@@ -1,10 +1,10 @@
 export const checkIfOpen = (location) => {
     if (!location?.openingHours?.periods) {
-        return { 
+        return {
             statusText: "Няма информация",
             detailText: "",
-            color: "text-gray-500", 
-            isOpen: false, 
+            color: "text-gray-500",
+            isOpen: false,
             isClosingSoon: false,
         };
     }
@@ -15,7 +15,7 @@ export const checkIfOpen = (location) => {
 
     const localDay = localTime.getDay();
     const currentTimeInMinutes = localTime.getHours() * 60 + localTime.getMinutes();
-    
+
     const todaysHours = location.openingHours.periods.find(p => p.open.day === localDay);
 
     if (todaysHours?.close) {
@@ -42,7 +42,7 @@ export const checkIfOpen = (location) => {
     }
 
     const dayNames = ['неделя', 'понеделник', 'вторник', 'сряда', 'четвъртък', 'петък', 'събота'];
-    
+
     let nextOpeningPeriod = null;
     for (let i = 0; i < 7; i++) {
         const nextDayIndex = (localDay + i) % 7;
@@ -64,8 +64,8 @@ export const checkIfOpen = (location) => {
     if (nextOpeningPeriod) {
         const day = dayNames[nextOpeningPeriod.open.day];
         const formattedTime = `${String(nextOpeningPeriod.open.hour).padStart(2, '0')}:${String(nextOpeningPeriod.open.minute).padStart(2, '0')}`;
-        
-        return { 
+
+        return {
             statusText: "Затворено",
             detailText: `Отваря ${day} в ${formattedTime}`,
             color: "text-red-500",
@@ -74,10 +74,10 @@ export const checkIfOpen = (location) => {
         };
     }
 
-    return { 
-        statusText: "Затворено", 
-        detailText: "", 
-        color: "text-red-500", 
+    return {
+        statusText: "Затворено",
+        detailText: "",
+        color: "text-red-500",
         isOpen: false,
         isClosingSoon: false,
     };

@@ -18,12 +18,14 @@ const Header = () => {
                 rel="noopener noreferrer"
                 className="flex-shrink-0" 
             >
-                <div className="relative inline-flex items-center space-x-2 px-6 py-3 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-[#266819] hover:opacity-90 focus:outline-none">
+                <div className="relative inline-flex items-center gap-2 pl-6 pr-2 py-2 border border-transparent text-sm font-bold rounded-full text-white bg-[#1B4712] hover:bg-[#15380E] focus:outline-none transition-colors">
                     <span>
                         Онлайн магазин
                     </span>
 
-                    <FiExternalLink className="w-4 h-4" />
+                    <div className="w-8 h-8 bg-[#4F7A42] rounded-full flex items-center justify-center">
+                        <FiExternalLink className="w-4 h-4" />
+                    </div>
                 </div>
             </a>
         </header>
