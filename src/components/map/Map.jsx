@@ -7,8 +7,6 @@ import CustomZoomControl from './map-buttons/CustomZoomControl';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtils';
 
-import { mapStyles } from './mapStyles';
-
 import borderData from '../../data/bulgaria-border.json';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
@@ -80,7 +78,6 @@ const Map = ({
     const center = currentUserPosition || DEFAULT_CENTER;
 
     const mapOptions = useMemo(() => ({
-        styles: mapStyles,
         disableDefaultUI: true,
         zoomControl: false,
         clickableIcons: false,
