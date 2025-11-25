@@ -1,60 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { GoogleMap, Marker, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
+import { GoogleMap, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
-import CustomZoomControl from './map-buttons/CustomZoomControl';
-
-import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { getMarkerIcons, createUserLocationMarker } from '../../utils/markerUtils';
-
-import borderData from '../../data/bulgaria-border.json';
-
-const mapContainerStyle = { width: '100%', height: '100%' };
+import CustomZoomControl from './controls/CustomZoomControl';
+import { mapContainerStyle, useMapOptions } from '../utils/mapOptions';
+import { clusterStyles, calculator } from '../utils/clusterStyles';
+import { getMarkerIcons, createUserLocationMarker } from '../../../utils/markerUtils';
+import borderData from '../../../data/bulgaria-border.json';
 
 const DEFAULT_CENTER = { lat: 42.7339, lng: 25.4858 };
 
-const clusterStyles = [
-    {
-        textColor: '#00562A',
-        url: '/cluster-1.png',
-        height: 80,
-        width: 80,
-        textSize: 20,
-    },
-    {
-        textColor: '#00562A',
-        url: '/cluster-2.png',
-        height: 85,
-        width: 85,
-        textSize: 21,
-    },
-    {
-        textColor: '#00562A',
-        url: '/cluster-3.png',
-        height: 90,
-        width: 90,
-        textSize: 22,
-    },
-];
-
-const calculator = (markers, numStyles) => {
-    const count = markers.length;
-    let index = 0;
-
-    if (count >= 6) {
-        index = 1;
-    }
-    if (count >= 16) {
-        index = 2;
-    }
-
-    return {
-        text: count.toString(),
-        index: index + 1,
-    };
-};
-
-const Map = ({
+const MapCanvas = ({
     map,
     onLoad,
     locations,
@@ -69,21 +25,12 @@ const Map = ({
     onMapClick,
     onShareClick,
 }) => {
-    const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
-    const isDesktop = useMediaQuery('(min-width: 768px)');
     const [isFullscreen, setIsFullscreen] = useState(false);
-
-    const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+    const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
+    const mapOptions = useMapOptions();
 
     const center = currentUserPosition || DEFAULT_CENTER;
-
-    const mapOptions = useMemo(() => ({
-        disableDefaultUI: true,
-        zoomControl: false,
-        clickableIcons: false,
-        minZoom: 7,
-        gestureHandling: 'greedy'
-    }), []);
+    const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
     const baseWrapperStyle = {
         position: 'relative',
@@ -91,38 +38,32 @@ const Map = ({
         height: '100%',
     };
 
-    const fullscreenStyle = {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '-webkit-fill-available',
-        zIndex: 1000,
-    };
-
-    const mobileMapOptions = useMemo(() => ({
-        ...mapOptions,
-        zoomControl: false,
-    }), [mapOptions]);
-
-    const mapWrapperStyle = isFullscreen ? { ...baseWrapperStyle, ...fullscreenStyle } : baseWrapperStyle;
+    const fullscreenStyle = isFullscreen
+        ? {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 1000,
+        }
+        : {};
 
     return (
-        <div style={mapWrapperStyle}>
+        <div style={{ ...baseWrapperStyle, ...fullscreenStyle }}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={center}
                 zoom={currentUserPosition ? 14 : 7}
-                options={showInfoWindow ? mapOptions : mobileMapOptions}
+                options={mapOptions}
                 onLoad={onLoad}
                 onIdle={onIdle}
                 onClick={onMapClick}
             >
-
                 <Data
-                    onLoad={(data) => {
-                        data.addGeoJson(borderData);
-                        data.setStyle({
+                    onLoad={(dataLayer) => {
+                        dataLayer.addGeoJson(borderData);
+                        dataLayer.setStyle({
                             fillOpacity: 0,
                             strokeColor: '#1B4712',
                             strokeWeight: 2,
@@ -131,7 +72,7 @@ const Map = ({
                     }}
                 />
 
-                <MarkerClustererF options={{ styles: clusterStyles }}>
+                <MarkerClustererF options={{ styles: clusterStyles, calculator }}>
                     {(clusterer) =>
                         locations && locations.map((loc) => {
                             const isSelected = selectedPlace?.id === loc.id;
@@ -145,7 +86,7 @@ const Map = ({
                                     clusterer={clusterer}
                                     onClick={() => onMarkerClick(loc)}
                                     icon={{
-                                        url: url,
+                                        url,
                                         scaledSize: size,
                                         anchor: new window.google.maps.Point(size.width / 2, size.height),
                                     }}
@@ -162,7 +103,7 @@ const Map = ({
                 {currentUserPosition && (
                     <MarkerF
                         position={currentUserPosition}
-                        title="Your Location"
+                        title="Вашето местоположение"
                         icon={{
                             url: userLocationIcon,
                             scaledSize: new window.google.maps.Size(48, 48),
@@ -178,12 +119,16 @@ const Map = ({
                         onCloseClick={onCloseInfoWindow}
                         options={{ pixelOffset: new window.google.maps.Size(0, -75) }}
                     >
-                        <CustomInfoWindowCard location={selectedPlace} onClose={onCloseInfoWindow} onShareClick={onShareClick} />
+                        <CustomInfoWindowCard
+                            location={selectedPlace}
+                            onClose={onCloseInfoWindow}
+                            onShareClick={onShareClick}
+                        />
                     </InfoWindow>
                 )}
             </GoogleMap>
 
-            {map && isDesktop && (
+            {map && (
                 <CustomZoomControl
                     map={map}
                     isFullscreen={isFullscreen}
@@ -194,4 +139,5 @@ const Map = ({
     );
 };
 
-export default Map;
+export default MapCanvas;
+
