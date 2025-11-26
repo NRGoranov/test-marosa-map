@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -7,14 +7,20 @@ import StyleInjector from '../components/ui/StyleInjector';
 import LocationPermissionModal from '../components/ui/LocationPermissionModal';
 import SlideDownMenu from '../components/ui/SlideDownMenu';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-import ResponsiveShell from '../app/layout/ResponsiveShell';
-import AppHeader from '../features/navigation/components/AppHeader';
 import LocationSearchBar from '../features/search/components/LocationSearchBar';
-import LocationList from '../features/locations/components/LocationList';
 import MapCanvas from '../features/map/components/MapCanvas';
 import ShareModal from '../features/sharing/components/ShareModal';
 import { useLocationsData } from '../features/locations/hooks/useLocationsData';
 import { useGeolocationGate } from '../features/geolocation/hooks/useGeolocationGate';
+import Logo from '../assets/icons/Logo';
+import SocialIcon from '../assets/icons/SocialIcon';
+import TikTokIcon from '../assets/icons/TikTokIcon';
+import InstagramIcon from '../assets/icons/InstagramIcon';
+import FacebookIcon from '../assets/icons/FacebookIcon';
+import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
+import ExternalLinkIcon from '../assets/icons/ExternalLinkIcon';
+import { filterLocationsByQuery } from '../utils/searchUtils';
+import styles from './MarosaLocator.module.css';
 
 function MarosaLocator() {
     const { isLoaded, loadError } = useJsApiLoader({
@@ -24,11 +30,10 @@ function MarosaLocator() {
 
     const navigate = useNavigate();
 
-    const { locations, allCities, isLoading: isLoadingData } = useLocationsData();
+    const { locations, allCities } = useLocationsData();
     const [map, setMap] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
-    const [visibleLocations, setVisibleLocations] = useState([]);
     const [locationToShare, setLocationToShare] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -43,16 +48,6 @@ function MarosaLocator() {
         handleAllow,
         handleDismiss,
     } = useGeolocationGate({ map, isMapReady: isLoaded });
-
-    useEffect(() => {
-        if (map && locations.length > 0) {
-            const bounds = map.getBounds();
-            if (!bounds) return;
-
-            const visible = locations.filter((loc) => bounds.contains(loc.position));
-            setVisibleLocations(visible);
-        }
-    }, [locations, map]);
 
     const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
@@ -70,15 +65,6 @@ function MarosaLocator() {
             console.error(`City not found in local data: ${cityName}`);
         }
     }, [map, allCities]);
-
-    const handleMapIdle = useCallback(() => {
-        if (!map || locations.length === 0) return;
-        const bounds = map.getBounds();
-        if (bounds) {
-            const visible = locations.filter((loc) => bounds.contains(loc.position));
-            setVisibleLocations(visible);
-        }
-    }, [map, locations]);
 
     const closeInfoWindow = useCallback(() => {
         setSelectedPlace(null);
@@ -148,11 +134,28 @@ function MarosaLocator() {
         handleMarkerClick(location);
     }, [handleMarkerClick]);
 
-    const panelTitle = selectedPlace
-        ? selectedPlace.displayName?.text
-        : `${visibleLocations.length || locations.length} обекта`;
+    const searchResults = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return { locations: [], cities: [] };
+        }
+        return filterLocationsByQuery(searchQuery, locations, allCities);
+    }, [searchQuery, locations, allCities]);
 
-    const panelData = selectedPlace ? [selectedPlace] : (visibleLocations.length ? visibleLocations : locations);
+    const handleSearchSubmit = useCallback((event) => {
+        event?.preventDefault?.();
+        if (!searchQuery.trim()) return;
+
+        if (searchResults.locations.length > 0) {
+            handleMarkerClick(searchResults.locations[0]);
+            setSearchQuery('');
+            return;
+        }
+
+        if (searchResults.cities.length > 0) {
+            handleCitySelect(searchResults.cities[0].bulgarianName);
+            setSearchQuery('');
+        }
+    }, [searchQuery, searchResults, handleMarkerClick, handleCitySelect]);
 
     return (
         <>
@@ -165,64 +168,126 @@ function MarosaLocator() {
 
             <StyleInjector />
 
-            <ResponsiveShell
-                header={
-                    <AppHeader
-                        onMenuToggle={handleMenuToggle}
-                        onNavigateToBrochure={() => navigate('/brochure')}
-                    />
-                }
-                toolbar={
-                    <LocationSearchBar
-                        query={searchQuery}
-                        onQueryChange={setSearchQuery}
-                        allLocations={locations}
-                        allCities={allCities}
-                        onCitySelect={handleCitySelect}
-                        onLocationSelect={handleLocationSearchSelect}
-                    />
-                }
-                map={
-                    isLoaded ? (
-                        <MapCanvas
-                            map={map}
-                            onLoad={onMapLoad}
-                            locations={locations}
-                            selectedPlace={selectedPlace}
-                            onMarkerClick={handleMarkerClick}
-                            onCloseInfoWindow={closeInfoWindow}
-                            currentUserPosition={currentUserPosition}
-                            hoveredPlaceId={hoveredPlaceId}
-                            onMarkerHover={setHoveredPlaceId}
-                            onIdle={handleMapIdle}
-                            onMapClick={handleMapClick}
-                            showInfoWindow={isDesktop}
-                            onShareClick={handleShareClick}
-                        />
+            <div className={styles.shell}>
+                <div className={styles.decorTop} aria-hidden="true" />
+                <div className={styles.decorBottom} aria-hidden="true" />
+                <div className={styles.decorTopRight} aria-hidden="true" />
+                <div className={styles.decorMidRight} aria-hidden="true" />
+
+                <section className={styles.heroSection}>
+                    <div className={styles.heroBackdrop} aria-hidden="true" />
+                    <div className={styles.heroBackdropTopRight} aria-hidden="true" />
+                    <div className={styles.heroLogo}>
+                        <Logo />
+                    </div>
+                    <a
+                        href="https://marossa.bg/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.shopButton}
+                    >
+                        Онлайн магазин
+                    </a>
+                    <div className={styles.heroInner}>
+                        <div className={styles.heroTopRail}>
+                            <div className={styles.headerActions}>
+                                {!isDesktop && (
+                                    <button
+                                        type="button"
+                                        className={`${styles.menuButtonMobile} ${isMenuOpen ? styles.menuButtonActive : ''}`}
+                                        onClick={handleMenuToggle}
+                                        aria-label="Отвори менюто"
+                                    >
+                                        <BurgerMenuIcon />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={styles.heroBody}>
+                            <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
+                            <h1 className={styles.heroTitle}>
+                                Lorem ipsum dolor sit amet <span className={styles.heroHighlight}>consectiur</span>
+                            </h1>
+                            <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
+                                <div className={styles.searchInput}>
+                                    <LocationSearchBar
+                                        query={searchQuery}
+                                        onQueryChange={setSearchQuery}
+                                        allLocations={locations}
+                                        allCities={allCities}
+                                        onCitySelect={handleCitySelect}
+                                        onLocationSelect={handleLocationSearchSelect}
+                                    />
+                                </div>
+                                <button type="submit" className={styles.searchButton}>
+                                    Търси
+                                </button>
+                            </form>
+                        </div>
+
+                        <div className={styles.heroFooter}>
+                            <div className={styles.footerAccent} aria-hidden="true" />
+                            <div className={styles.footerRow}>
+                                <button
+                                    type="button"
+                                    className={styles.brochureHint}
+                                    onClick={() => navigate('/brochure')}
+                                >
+                                    Разгледайте нашата <span>Брошура</span>
+                                    <ExternalLinkIcon className={styles.brochureIcon} />
+                                </button>
+
+                                <div className={styles.socialRail}>
+                                    <SocialIcon
+                                        href="https://www.tiktok.com/@nedev.bg?_t=ZN-8xUznEkh4Mg"
+                                        label="TikTok"
+                                    >
+                                        <TikTokIcon />
+                                    </SocialIcon>
+                                    <SocialIcon
+                                        href="https://www.instagram.com/marosagradina?igsh=MXhld2tjd2hyaWphag=="
+                                        label="Instagram"
+                                    >
+                                        <InstagramIcon />
+                                    </SocialIcon>
+                                    <SocialIcon
+                                        href="https://www.facebook.com/profile.php?id=100066825065618"
+                                        label="Facebook"
+                                    >
+                                        <FacebookIcon />
+                                    </SocialIcon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className={styles.mapSection} aria-label="Интерактивна карта">
+                    {isLoaded ? (
+                        <div className={styles.mapSurface}>
+                            <MapCanvas
+                                map={map}
+                                onLoad={onMapLoad}
+                                locations={locations}
+                                selectedPlace={selectedPlace}
+                                onMarkerClick={handleMarkerClick}
+                                onCloseInfoWindow={closeInfoWindow}
+                                currentUserPosition={currentUserPosition}
+                                hoveredPlaceId={hoveredPlaceId}
+                                onMarkerHover={setHoveredPlaceId}
+                                onMapClick={handleMapClick}
+                                showInfoWindow={isDesktop}
+                                onShareClick={handleShareClick}
+                            />
+                        </div>
                     ) : (
-                        <div className="flex h-full items-center justify-center text-[#7A8E74]">
+                        <div className={`${styles.mapSurface} ${styles.mapFallback}`}>
                             {loadError ? 'Проблем при зареждане на картата' : 'Зареждане на картата...'}
                         </div>
-                    )
-                }
-                panelTitle={panelTitle}
-                panel={
-                    isLoadingData ? (
-                        <div className="flex h-full items-center justify-center text-[#7A8E74]">
-                            Зареждаме списъка...
-                        </div>
-                    ) : (
-                        <LocationList
-                            locations={panelData}
-                            selectedPlaceId={selectedPlace?.id || selectedPlace?.placeId}
-                            hoveredPlaceId={hoveredPlaceId}
-                            onSelect={handleMarkerClick}
-                            onHover={setHoveredPlaceId}
-                            onShare={handleShareClick}
-                        />
-                    )
-                }
-            />
+                    )}
+                </section>
+            </div>
 
             <SlideDownMenu
                 isOpen={isMenuOpen}

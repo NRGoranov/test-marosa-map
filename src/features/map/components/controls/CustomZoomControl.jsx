@@ -38,3 +38,5 @@ const CustomZoomControl = ({ map, onToggleFullscreen, isFullscreen }) => {
 
 export default CustomZoomControl;
 
+
+

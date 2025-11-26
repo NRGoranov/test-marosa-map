@@ -55,3 +55,5 @@ const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
 
 export default CustomInfoWindowCard;
 
+
+

@@ -38,3 +38,5 @@ const AppHeader = ({ onMenuToggle, onNavigateToBrochure }) => {
 
 export default AppHeader;
 
+
+
