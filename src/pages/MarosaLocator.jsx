@@ -1,17 +1,26 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
-import DesktopView from '../components/layout/desktop/DesktopView';
-import MobileView from '../components/layout/mobile/MobileView';
-
 import StyleInjector from '../components/ui/StyleInjector';
 import LocationPermissionModal from '../components/ui/LocationPermissionModal';
-import DesktopShareModal from '../components/layout/desktop/DesktopShareModal';
+import SlideDownMenu from '../components/ui/SlideDownMenu';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-
-import citiesData from '../data/filtered_cities_minified.json';
+import LocationSearchBar from '../features/search/components/LocationSearchBar';
+import MapCanvas from '../features/map/components/MapCanvas';
+import ShareModal from '../features/sharing/components/ShareModal';
+import { useLocationsData } from '../features/locations/hooks/useLocationsData';
+import { useGeolocationGate } from '../features/geolocation/hooks/useGeolocationGate';
+import Logo from '../assets/icons/Logo';
+import SocialIcon from '../assets/icons/SocialIcon';
+import TikTokIcon from '../assets/icons/TikTokIcon';
+import InstagramIcon from '../assets/icons/InstagramIcon';
+import FacebookIcon from '../assets/icons/FacebookIcon';
+import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
+import ExternalLinkIcon from '../assets/icons/ExternalLinkIcon';
+import { filterLocationsByQuery } from '../utils/searchUtils';
+import styles from './MarosaLocator.module.css';
 
 function MarosaLocator() {
     const { isLoaded, loadError } = useJsApiLoader({
@@ -21,138 +30,24 @@ function MarosaLocator() {
 
     const navigate = useNavigate();
 
-    const [locations, setLocations] = useState([]);
-    const [allCities, setAllCities] = useState([]);
-    const [isLoadingData, setIsLoadingData] = useState(true);
+    const { locations, allCities } = useLocationsData();
     const [map, setMap] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
-    const [currentUserPosition, setCurrentUserPosition] = useState(null);
-    const [placeDetails, setPlaceDetails] = useState(null);
-    const [visibleLocations, setVisibleLocations] = useState([]);
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
     const [locationToShare, setLocationToShare] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const isDesktop = useMediaQuery('(min-width: 768px)');
+    const isDesktop = useMediaQuery('(min-width: 1024px)');
 
     const markerClickRef = useRef(false);
 
-    useEffect(() => {
-        const loadData = async () => {
-            setIsLoadingData(true);
-            try {
-                const locationsResponse = await fetch('https://api.marosamap.eu/api/stores');
-
-                if (!locationsResponse.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const locationsData = await locationsResponse.json();
-
-                const transformedLocationsData = locationsData.map(location => ({
-                    ...location,
-                    position: { lat: location.lat, lng: location.lng }
-                }));
-
-                setLocations(transformedLocationsData);
-
-                const uniqueCities = citiesData.reduce((accumulator, current) => {
-                    if (!accumulator.find(item => item.city === current.city)) {
-                        accumulator.push(current);
-                    }
-                    return accumulator;
-                }, []);
-
-                const transformedCitiesData = uniqueCities.map(city => {
-                    const bulgarianName = (city.alt_names && city.alt_names.length > 0)
-                        ? city.alt_names[city.alt_names.length - 1]
-                        : city.city;
-
-                    return {
-                        englishName: city.city,
-                        bulgarianName: bulgarianName,
-                        lat: city.lat,
-                        lng: city.lng,
-                    };
-                });
-
-                setAllCities(transformedCitiesData);
-
-                console.log("Successfully fetched data.");
-
-                console.log(transformedLocationsData);
-            } catch (error) {
-                console.error("Error fetching data from API: ", error);
-            } finally {
-                setIsLoadingData(false);
-            }
-        };
-
-        loadData();
-    }, []);
-
-    const requestLocation = useCallback(() => {
-        if (!map || !navigator.geolocation) return;
-        
-        setHasRequestedLocation(true);
-        setIsLocationModalOpen(false);
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                console.log("Geolocation Success! Position:", position.coords);
-                const userPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                setCurrentUserPosition(userPos);
-                map.panTo(userPos);
-                map.setZoom(15);
-            },
-            () => {
-                console.error("Geolocation permission denied or service failed.");
-            }
-        );
-    }, [map]);
-
-    const handleLocationAllow = useCallback(() => {
-        requestLocation();
-    }, [requestLocation]);
-
-    const handleLocationCancel = useCallback(() => {
-        setIsLocationModalOpen(false);
-        setHasRequestedLocation(true);
-    }, []);
-
-    useEffect(() => {
-        if (isLoaded && map && navigator.geolocation && !hasRequestedLocation) {
-            // Small delay to ensure map is fully rendered
-            const timer = setTimeout(() => {
-                console.log('Checking location permission...');
-                // Check if permission was already granted
-                if (navigator.permissions) {
-                    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-                        console.log('Permission state:', result.state);
-                        if (result.state === 'granted') {
-                            // Permission already granted, request location directly
-                            requestLocation();
-                        } else {
-                            // Show modal for prompt or denied state
-                            console.log('Showing location modal');
-                            setIsLocationModalOpen(true);
-                        }
-                    }).catch((error) => {
-                        console.log('Permissions API error, showing modal:', error);
-                        // Permissions API not supported or failed, show modal
-                        setIsLocationModalOpen(true);
-                    });
-                } else {
-                    console.log('Permissions API not supported, showing modal');
-                    // Permissions API not supported, show modal
-                    setIsLocationModalOpen(true);
-                }
-            }, 1000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [isLoaded, map, hasRequestedLocation, requestLocation]);
+    const {
+        currentUserPosition,
+        isPermissionModalOpen,
+        handleAllow,
+        handleDismiss,
+    } = useGeolocationGate({ map, isMapReady: isLoaded });
 
     const handleCitySelect = useCallback((cityName) => {
         if (!map) return;
@@ -171,35 +66,8 @@ function MarosaLocator() {
         }
     }, [map, allCities]);
 
-    const handleMapIdle = useCallback(() => {
-        if (!map || locations.length === 0) {
-            if (locations.length > 0) {
-                setVisibleLocations([]);
-            }
-
-            return;
-        }
-
-        const bounds = map.getBounds();
-
-        if (bounds) {
-            const visible = locations.filter(loc =>
-                bounds.contains(loc.position)
-            );
-
-            setVisibleLocations(visible);
-        }
-    }, [map, locations]);
-
-    useEffect(() => {
-        if (map && locations.length > 0) {
-            handleMapIdle();
-        }
-    }, [locations, map, handleMapIdle]);
-
     const closeInfoWindow = useCallback(() => {
         setSelectedPlace(null);
-        setPlaceDetails(null);
     }, []);
 
     const handleMapClick = useCallback(() => {
@@ -217,14 +85,12 @@ function MarosaLocator() {
 
         if (selectedPlace?.id === place.id) {
             setSelectedPlace(null);
-            setPlaceDetails(null);
         } else {
             if (map) {
                 map.panTo(place.position);
                 map.setZoom(14);
             }
             setSelectedPlace(place);
-            setPlaceDetails(place);
         }
         
         // Reset the ref after a short delay to allow proper click detection
@@ -261,28 +127,35 @@ function MarosaLocator() {
 
     const onMapLoad = useCallback((map) => setMap(map), []);
 
-    const viewProps = {
-        map,
-        onLoad: onMapLoad,
-        locations: visibleLocations,
-        allLocations: locations,
-        allCities: allCities,
-        isInitialLoading: isLoadingData,
-        selectedPlace,
-        placeDetails,
-        onMarkerClick: handleMarkerClick,
-        onCloseInfoWindow: closeInfoWindow,
-        onMapClick: handleMapClick,
-        currentUserPosition,
-        hoveredPlaceId,
-        onMarkerHover: setHoveredPlaceId,
-        onListItemHover: setHoveredPlaceId,
-        onIdle: handleMapIdle,
-        loadError,
-        isLoaded,
-        showInfoWindow: isDesktop,
-        onCitySelect: handleCitySelect,
-    };
+    const handleMenuToggle = () => setIsMenuOpen((prev) => !prev);
+
+    const handleLocationSearchSelect = useCallback((location) => {
+        setSearchQuery('');
+        handleMarkerClick(location);
+    }, [handleMarkerClick]);
+
+    const searchResults = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return { locations: [], cities: [] };
+        }
+        return filterLocationsByQuery(searchQuery, locations, allCities);
+    }, [searchQuery, locations, allCities]);
+
+    const handleSearchSubmit = useCallback((event) => {
+        event?.preventDefault?.();
+        if (!searchQuery.trim()) return;
+
+        if (searchResults.locations.length > 0) {
+            handleMarkerClick(searchResults.locations[0]);
+            setSearchQuery('');
+            return;
+        }
+
+        if (searchResults.cities.length > 0) {
+            handleCitySelect(searchResults.cities[0].bulgarianName);
+            setSearchQuery('');
+        }
+    }, [searchQuery, searchResults, handleMarkerClick, handleCitySelect]);
 
     return (
         <>
@@ -294,20 +167,142 @@ function MarosaLocator() {
             </Helmet>
 
             <StyleInjector />
-            {isDesktop ? (
-                <DesktopView {...viewProps} onShareClick={handleShareClick} />
-            ) : (
-                <MobileView
-                    {...viewProps}
-                    onNavigateToBrochure={() => navigate('/brochure')}
-                />
-            )}
-            <LocationPermissionModal
-                isOpen={isLocationModalOpen}
-                onAllow={handleLocationAllow}
-                onCancel={handleLocationCancel}
+
+            <div className={styles.shell}>
+                <div className={styles.decorTop} aria-hidden="true" />
+                <div className={styles.decorBottom} aria-hidden="true" />
+                <div className={styles.decorTopRight} aria-hidden="true" />
+                <div className={styles.decorMidRight} aria-hidden="true" />
+
+                <section className={styles.heroSection}>
+                    <div className={styles.heroBackdrop} aria-hidden="true" />
+                    <div className={styles.heroBackdropTopRight} aria-hidden="true" />
+                    <div className={styles.heroLogo}>
+                        <Logo />
+                    </div>
+                    <a
+                        href="https://marossa.bg/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.shopButton}
+                    >
+                        Онлайн магазин
+                    </a>
+                    <div className={styles.heroInner}>
+                        <div className={styles.heroTopRail}>
+                            <div className={styles.headerActions}>
+                                {!isDesktop && (
+                                    <button
+                                        type="button"
+                                        className={`${styles.menuButtonMobile} ${isMenuOpen ? styles.menuButtonActive : ''}`}
+                                        onClick={handleMenuToggle}
+                                        aria-label="Отвори менюто"
+                                    >
+                                        <BurgerMenuIcon />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={styles.heroBody}>
+                            <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
+                            <h1 className={styles.heroTitle}>
+                                Lorem ipsum dolor sit amet <span className={styles.heroHighlight}>consectiur</span>
+                            </h1>
+                            <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
+                                <div className={styles.searchInput}>
+                                    <LocationSearchBar
+                                        query={searchQuery}
+                                        onQueryChange={setSearchQuery}
+                                        allLocations={locations}
+                                        allCities={allCities}
+                                        onCitySelect={handleCitySelect}
+                                        onLocationSelect={handleLocationSearchSelect}
+                                    />
+                                </div>
+                                <button type="submit" className={styles.searchButton}>
+                                    Търси
+                                </button>
+                            </form>
+                        </div>
+
+                        <div className={styles.heroFooter}>
+                            <div className={styles.footerAccent} aria-hidden="true" />
+                            <div className={styles.footerRow}>
+                                <button
+                                    type="button"
+                                    className={styles.brochureHint}
+                                    onClick={() => navigate('/brochure')}
+                                >
+                                    Разгледайте нашата <span>Брошура</span>
+                                    <ExternalLinkIcon className={styles.brochureIcon} />
+                                </button>
+
+                                <div className={styles.socialRail}>
+                                    <SocialIcon
+                                        href="https://www.tiktok.com/@nedev.bg?_t=ZN-8xUznEkh4Mg"
+                                        label="TikTok"
+                                    >
+                                        <TikTokIcon />
+                                    </SocialIcon>
+                                    <SocialIcon
+                                        href="https://www.instagram.com/marosagradina?igsh=MXhld2tjd2hyaWphag=="
+                                        label="Instagram"
+                                    >
+                                        <InstagramIcon />
+                                    </SocialIcon>
+                                    <SocialIcon
+                                        href="https://www.facebook.com/profile.php?id=100066825065618"
+                                        label="Facebook"
+                                    >
+                                        <FacebookIcon />
+                                    </SocialIcon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className={styles.mapSection} aria-label="Интерактивна карта">
+                    {isLoaded ? (
+                        <div className={styles.mapSurface}>
+                            <MapCanvas
+                                map={map}
+                                onLoad={onMapLoad}
+                                locations={locations}
+                                selectedPlace={selectedPlace}
+                                onMarkerClick={handleMarkerClick}
+                                onCloseInfoWindow={closeInfoWindow}
+                                currentUserPosition={currentUserPosition}
+                                hoveredPlaceId={hoveredPlaceId}
+                                onMarkerHover={setHoveredPlaceId}
+                                onMapClick={handleMapClick}
+                                showInfoWindow={isDesktop}
+                                onShareClick={handleShareClick}
+                            />
+                        </div>
+                    ) : (
+                        <div className={`${styles.mapSurface} ${styles.mapFallback}`}>
+                            {loadError ? 'Проблем при зареждане на картата' : 'Зареждане на картата...'}
+                        </div>
+                    )}
+                </section>
+            </div>
+
+            <SlideDownMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onBrochureClick={() => navigate('/brochure')}
+                menuVariant="home"
             />
-            <DesktopShareModal
+
+            <LocationPermissionModal
+                isOpen={isPermissionModalOpen}
+                onAllow={handleAllow}
+                onCancel={handleDismiss}
+            />
+
+            <ShareModal
                 isOpen={!!locationToShare}
                 onClose={() => setLocationToShare(null)}
                 place={locationToShare}

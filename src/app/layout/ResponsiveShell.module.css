@@ -1,0 +1,91 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f7f9f6;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: white;
+  border-bottom: 1px solid #e4ede0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  gap: 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.mapSection,
+.panelSection {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(9, 45, 24, 0.07);
+  overflow: hidden;
+}
+
+.mapSection {
+  min-height: 420px;
+}
+
+.panelSection {
+  min-height: 320px;
+  padding: 1rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.panelTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1b4712;
+}
+
+.toolbar {
+  padding: 0 1rem;
+}
+
+.floatingSlot {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.25rem;
+  z-index: 40;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content {
+    flex-direction: row;
+  }
+
+  .mapSection {
+    flex: 1.4;
+    min-height: 540px;
+  }
+
+  .panelSection {
+    flex: 1;
+    min-height: 540px;
+  }
+}
+
+
+

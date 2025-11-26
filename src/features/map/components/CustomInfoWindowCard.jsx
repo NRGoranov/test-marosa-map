@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { checkIfOpen } from '../../utils/timeUtils';
-import DirectionsIcon from '../../assets/icons/DirectionsIcon';
-import ShareLocationIcon from '../../assets/icons/ShareLocationIcon';
+import { checkIfOpen } from '../../../utils/timeUtils';
+import DirectionsIcon from '../../../assets/icons/DirectionsIcon';
+import ShareLocationIcon from '../../../assets/icons/ShareLocationIcon';
 
 const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
     if (!location) return null;
@@ -12,7 +12,7 @@ const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
     const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.displayName.text)}&query_place_id=${location.placeId}`;
 
     return (
-        <div className="bg-white rounded-2  xl rounded-tr-[60px] flex items-center p-4 space-x-3 relative font-montserrat border border-gray-200 shadow-lg" style={{ width: '450px' }}>
+        <div className="bg-white rounded-2 xl rounded-tr-[60px] flex items-center p-4 space-x-3 relative font-montserrat border border-gray-200 shadow-lg" style={{ width: '450px' }}>
             <div className="flex-shrink-0">
                 <img src={photoUrl} alt={location.displayName.text} className="w-20 h-20 rounded-lg object-cover" />
             </div>
@@ -54,3 +54,6 @@ const CustomInfoWindowCard = ({ location, onClose, onShareClick }) => {
 };
 
 export default CustomInfoWindowCard;
+
+
+
