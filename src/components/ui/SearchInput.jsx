@@ -19,6 +19,8 @@ const SearchInput = ({
     className = '', 
     autoFocus = false,
     iconClassName = '',
+    onFocus,
+    onKeyDown,
     children
 }) => {
     return (
@@ -31,6 +33,8 @@ const SearchInput = ({
                 type="text"
                 value={value}
                 onChange={onChange}
+                onFocus={onFocus}
+                onKeyDown={onKeyDown}
                 autoFocus={autoFocus}
                 placeholder={SEARCH_PLACEHOLDER_BG}
                 className={className}

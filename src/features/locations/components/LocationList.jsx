@@ -19,7 +19,7 @@ const LocationList = ({
     }
 
     return (
-        <ul className="space-y-3 overflow-y-auto max-h-[calc(100vh-320px)] pr-1">
+        <ul className="space-y-3">
             {locations.map((location) => (
                 <LocationListItem
                     key={location.placeId || location.id}
@@ -36,6 +36,7 @@ const LocationList = ({
 };
 
 export default LocationList;
+
 
 
 

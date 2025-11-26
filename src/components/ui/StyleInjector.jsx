@@ -98,6 +98,35 @@ const StyleInjector = () => (
         [data-rsbs-overlay] {
             --rsbs-overlay-rounded: 36px;
         }
+
+        /* Share Modal Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .animate-scaleIn {
+            animation: scaleIn 0.3s ease-out;
+        }
         `}
     </style>
 );

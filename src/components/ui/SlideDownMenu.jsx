@@ -9,10 +9,10 @@ import ExternalLinkIcon from '../../assets/icons/ExternalLinkIcon';
 
 const SlideDownMenu = ({ isOpen, onClose, onBrochureClick, onHomeClick, menuVariant = 'home' }) => {
     const transitions = useTransition(isOpen, {
-        from: { menuOpacity: 0, transform: 'translateY(-100%)', overlayOpacity: 0 },
-        enter: { menuOpacity: 1, transform: 'translateY(0%)', overlayOpacity: 0 },
-        leave: { menuOpacity: 0, transform: 'translateY(-100%)', overlayOpacity: 0 },
-        config: { tension: 280, friction: 25 },
+        from: { menuOpacity: 0, transform: 'scale(0.8)', overlayOpacity: 0 },
+        enter: { menuOpacity: 1, transform: 'scale(1)', overlayOpacity: 0 },
+        leave: { menuOpacity: 0, transform: 'scale(0.8)', overlayOpacity: 0 },
+        config: { tension: 300, friction: 30 },
     });
 
     const headerHeight = '84px';

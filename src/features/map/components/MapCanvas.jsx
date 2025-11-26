@@ -24,6 +24,7 @@ const MapCanvas = ({
     onIdle,
     onMapClick,
     onShareClick,
+    isDesktop = false,
 }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
@@ -128,7 +129,7 @@ const MapCanvas = ({
                 )}
             </GoogleMap>
 
-            {map && (
+            {map && isDesktop && (
                 <CustomZoomControl
                     map={map}
                     isFullscreen={isFullscreen}
@@ -140,6 +141,7 @@ const MapCanvas = ({
 };
 
 export default MapCanvas;
+
 
 
 

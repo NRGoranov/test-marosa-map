@@ -11,6 +11,9 @@ export function useGeolocationGate({ map, isMapReady }) {
     const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
 
     const hasAttemptedRef = useRef(false);
+    
+    // Check if modal was dismissed in a previous session
+    const wasDismissed = typeof window !== 'undefined' && localStorage.getItem('locationPermissionDismissed') === 'true';
 
     const requestLocation = useCallback(() => {
         if (!map || !navigator.geolocation) return;
@@ -41,10 +44,14 @@ export function useGeolocationGate({ map, isMapReady }) {
     const handleDismiss = useCallback(() => {
         setIsPermissionModalOpen(false);
         setHasRequestedLocation(true);
+        // Persist dismissal in localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('locationPermissionDismissed', 'true');
+        }
     }, []);
 
     useEffect(() => {
-        if (!isMapReady || !map || !navigator.geolocation || hasAttemptedRef.current) {
+        if (!isMapReady || !map || !navigator.geolocation || hasAttemptedRef.current || wasDismissed) {
             return;
         }
 
@@ -67,7 +74,7 @@ export function useGeolocationGate({ map, isMapReady }) {
         };
 
         permissionCheck();
-    }, [isMapReady, map, requestLocation]);
+    }, [isMapReady, map, requestLocation, wasDismissed]);
 
     return {
         currentUserPosition,
@@ -76,6 +83,7 @@ export function useGeolocationGate({ map, isMapReady }) {
         handleDismiss,
     };
 }
+
 
 
 

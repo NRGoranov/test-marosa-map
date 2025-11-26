@@ -1,7 +1,8 @@
 import React from 'react';
 
 import StarRating from '../../../assets/StarRating';
-import ShareIcon from '../../../assets/icons/ShareIcon';
+import ShareLocationIcon from '../../../assets/icons/ShareLocationIcon';
+import DirectionsIcon from '../../../assets/icons/DirectionsIcon';
 
 const LocationListItem = ({
     location,
@@ -18,6 +19,8 @@ const LocationListItem = ({
     const title = location.displayName?.text || location.name;
     const city = location.shortFormattedAddress || location.formattedAddress;
     const ratingValue = Number(location.rating) || 5;
+    const photoUrl = location.imageUrl || 'https://i.imgur.com/g2a4JAh.png';
+    const mapsUrl = location.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title)}&query_place_id=${location.placeId}`;
 
     return (
         <li
@@ -30,7 +33,14 @@ const LocationListItem = ({
             onMouseEnter={() => onHover(location.placeId)}
             onMouseLeave={() => onHover(null)}
         >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                    <img 
+                        src={photoUrl} 
+                        alt={title} 
+                        className="w-16 h-16 rounded-lg object-cover"
+                    />
+                </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-sm text-[#7A8E74]">{city}</p>
                     <p className="text-lg font-semibold text-[#0D2F13] truncate">{title}</p>
@@ -39,23 +49,36 @@ const LocationListItem = ({
                         <span className="text-sm font-semibold">{ratingValue.toFixed(1)}</span>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    aria-label="Сподели обекта"
-                    className="p-2 rounded-full border border-[#E6F2E2] text-[#1B4712] hover:bg-[#C9F0C2]"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onShare(location);
-                    }}
-                >
-                    <ShareIcon className="w-4 h-4" />
-                </button>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                    <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                        className="p-2 rounded-full bg-[#C9F0C2] text-[#1B4712] hover:bg-[#b3e6ac] transition-all flex items-center justify-center"
+                        aria-label="Насоки"
+                    >
+                        <DirectionsIcon className="w-4 h-4" />
+                    </a>
+                    <button
+                        type="button"
+                        aria-label="Сподели обекта"
+                        className="p-2 rounded-full border border-[#E6F2E2] text-[#1B4712] hover:bg-[#C9F0C2] transition-all"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onShare(location);
+                        }}
+                    >
+                        <ShareLocationIcon className="w-4 h-4 text-[#1B4712]" />
+                    </button>
+                </div>
             </div>
         </li>
     );
 };
 
 export default LocationListItem;
+
 
 
 

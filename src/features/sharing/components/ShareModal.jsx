@@ -46,7 +46,24 @@ const ShareModal = ({ isOpen, onClose, place }) => {
     }
 
     const encodedUrl = encodeURIComponent(googleMapsUrl);
-    const imageUrl = place.photos?.[0]?.getUrl?.({ maxWidth: 400, maxHeight: 400 }) || place.icon || place.imageUrl;
+    
+    // Get image URL with multiple fallbacks
+    let imageUrl = place.imageUrl;
+    if (!imageUrl && place.photos?.[0]?.getUrl) {
+        try {
+            imageUrl = place.photos[0].getUrl({ maxWidth: 600, maxHeight: 600 });
+        } catch (e) {
+            console.warn('Failed to get photo URL:', e);
+        }
+    }
+    if (!imageUrl && place.icon) {
+        imageUrl = place.icon;
+    }
+    // Final fallback to default image
+    if (!imageUrl) {
+        imageUrl = 'https://i.imgur.com/g2a4JAh.png';
+    }
+    
     const openingHoursInfo = checkIfOpen(place);
     const ratingValue = Number(place.rating) || 5;
     const locationName = place?.name || place?.displayName?.text || 'Мароса Градина';
@@ -66,8 +83,21 @@ const ShareModal = ({ isOpen, onClose, place }) => {
         },
         {
             name: 'Instagram',
-            href: 'https://www.instagram.com/marosagradina',
+            href: `https://www.instagram.com/direct/inbox/`,
             icon: <InstagramIcon className="w-5 h-5 text-[#1B4712]" />,
+            onClick: (e) => {
+                // Try Instagram app deep link first (mobile)
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                    const appLink = `instagram://direct?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`;
+                    window.location.href = appLink;
+                    // Fallback to web after a short delay if app doesn't open
+                    setTimeout(() => {
+                        window.open(`https://www.instagram.com/direct/inbox/`, '_blank');
+                    }, 500);
+                    e.preventDefault();
+                }
+            },
         },
         {
             name: 'Messenger',
@@ -92,9 +122,9 @@ const ShareModal = ({ isOpen, onClose, place }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4 animate-fadeIn" onClick={onClose}>
             <div
-                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5"
+                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5 animate-scaleIn"
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between">
@@ -103,21 +133,25 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                         type="button"
                         onClick={onClose}
                         aria-label="Затвори"
-                        className="w-8 h-8 flex items-center justify-center rounded-full border border-[#E6F2E2]"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-[#E6F2E2] transition-all duration-200 hover:bg-[#EAF6E7] hover:border-[#1B4712] hover:scale-110 active:scale-95"
                     >
-                        <FiX size={20} />
+                        <FiX size={20} className="transition-transform duration-200 hover:rotate-90" />
                     </button>
                 </div>
 
                 <div className="flex gap-4 border-b border-[#E6F2E2] pb-4">
-                    {imageUrl && (
+                    <div className="relative group">
                         <img
                             src={imageUrl}
                             alt={locationName}
-                            className="w-20 h-20 rounded-2xl object-cover flex-shrink-0"
+                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
                             loading="lazy"
+                            onError={(e) => {
+                                // Fallback if image fails to load
+                                e.target.src = 'https://i.imgur.com/g2a4JAh.png';
+                            }}
                         />
-                    )}
+                    </div>
                     <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-[#1B4712] font-semibold">{ratingValue.toFixed(1)}</span>
@@ -136,16 +170,20 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {shareOptions.map((option) => {
                         const baseClasses = `group flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-300 ${
-                            option.highlight ? 'border-[#1B4712] bg-[#EAF6E7]' : 'border-[#E6F2E2] bg-white hover:border-[#C9F0C2]'
+                            option.highlight 
+                                ? 'border-[#1B4712] bg-[#EAF6E7] scale-105' 
+                                : 'border-[#E6F2E2] bg-white hover:border-[#C9F0C2] hover:bg-[#F5FBF3] hover:shadow-md hover:scale-105 active:scale-95'
                         }`;
 
                         if (option.action) {
                             return (
                                 <button key={option.name} type="button" onClick={option.action} className={baseClasses}>
-                                    <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712]">
-                                        {option.icon}
+                                    <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm">
+                                        <span className="transition-transform duration-300 group-hover:scale-110">
+                                            {option.icon}
+                                        </span>
                                     </span>
-                                    <span className="text-sm font-semibold text-[#1B4712]">{option.name}</span>
+                                    <span className="text-sm font-semibold text-[#1B4712] transition-colors duration-300 group-hover:text-[#0D2F13]">{option.name}</span>
                                 </button>
                             );
                         }
@@ -154,14 +192,17 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                             <a
                                 key={option.name}
                                 href={option.href}
+                                onClick={option.onClick}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={baseClasses}
                             >
-                                <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712]">
-                                    {option.icon}
+                                <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm">
+                                    <span className="transition-transform duration-300 group-hover:scale-110">
+                                        {option.icon}
+                                    </span>
                                 </span>
-                                <span className="text-sm font-semibold text-[#1B4712]">{option.name}</span>
+                                <span className="text-sm font-semibold text-[#1B4712] transition-colors duration-300 group-hover:text-[#0D2F13]">{option.name}</span>
                             </a>
                         );
                     })}
@@ -172,6 +213,7 @@ const ShareModal = ({ isOpen, onClose, place }) => {
 };
 
 export default ShareModal;
+
 
 
 
