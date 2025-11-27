@@ -75,29 +75,49 @@ const MapCanvas = ({
 
                 <MarkerClustererF options={{ styles: clusterStyles, calculator }}>
                     {(clusterer) =>
-                        locations && locations.map((loc) => {
-                            const isSelected = selectedPlace?.id === loc.id;
-                            const isHovered = hoveredPlaceId === loc.placeId;
-                            const { url, size } = getMarkerIcons(isSelected, isHovered, loc);
+                        locations && locations
+                            .filter((loc) => {
+                                // Additional safety check: ensure position exists and is valid
+                                if (!loc.position) return false;
+                                const { lat, lng } = loc.position;
+                                return (
+                                    typeof lat === 'number' && 
+                                    !isNaN(lat) && 
+                                    typeof lng === 'number' && 
+                                    !isNaN(lng) &&
+                                    lat >= -90 && lat <= 90 &&
+                                    lng >= -180 && lng <= 180
+                                );
+                            })
+                            .map((loc) => {
+                                // Ensure window.google exists before accessing it
+                                if (typeof window === 'undefined' || !window.google || !window.google.maps) {
+                                    return null;
+                                }
+                                
+                                const isSelected = selectedPlace?.id === loc.id;
+                                const isHovered = hoveredPlaceId === loc.placeId;
+                                const { url, size } = getMarkerIcons(isSelected, isHovered, loc);
 
-                            return (
-                                <MarkerF
-                                    key={loc.id}
-                                    position={loc.position}
-                                    clusterer={clusterer}
-                                    onClick={() => onMarkerClick(loc)}
-                                    icon={{
-                                        url,
-                                        scaledSize: size,
-                                        anchor: new window.google.maps.Point(size.width / 2, size.height),
-                                    }}
-                                    title={loc.displayName.text}
-                                    zIndex={isSelected || isHovered ? 10 : 1}
-                                    onMouseOver={() => onMarkerHover(loc.placeId)}
-                                    onMouseOut={() => onMarkerHover(null)}
-                                />
-                            );
-                        })
+                                return (
+                                    <MarkerF
+                                        key={loc.id}
+                                        position={loc.position}
+                                        clusterer={clusterer}
+                                        onClick={() => onMarkerClick(loc)}
+                                        icon={{
+                                            url,
+                                            scaledSize: size,
+                                            anchor: new window.google.maps.Point(size.width / 2, size.height),
+                                        }}
+                                        title={loc.displayName?.text || ''}
+                                        zIndex={isSelected || isHovered ? 10 : 1}
+                                        onMouseOver={() => onMarkerHover(loc.placeId)}
+                                        onMouseOut={() => onMarkerHover(null)}
+                                    />
+                                );
+                            })
+                            .filter(Boolean) // Remove any null entries
                     }
                 </MarkerClustererF>
 
@@ -114,7 +134,7 @@ const MapCanvas = ({
                     />
                 )}
 
-                {showInfoWindow && selectedPlace && (
+                {showInfoWindow && selectedPlace && selectedPlace.position && typeof window !== 'undefined' && window.google && window.google.maps && (
                     <InfoWindow
                         position={selectedPlace.position}
                         onCloseClick={onCloseInfoWindow}

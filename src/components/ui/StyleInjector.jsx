@@ -5,8 +5,26 @@ const StyleInjector = () => (
         {`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;800&display=swap');
         
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        body {
+            touch-action: none;
+        }
+        
+        #root {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
         }
         .gm-style-iw {
             background: transparent !important;
@@ -27,6 +45,28 @@ const StyleInjector = () => (
         }
         .gm-ui-hover-effect {
             display: none !important;
+        }
+        
+        /* Map background color - only for loading state, not tiles */
+        .mapSurface {
+            background-color: #f5f9f3;
+        }
+        
+        /* Only apply background to map container wrapper, not the actual map tiles */
+        .mapSection {
+            background-color: #f5f9f3;
+        }
+        
+        /* Remove background from map tiles - let them show through */
+        .gm-style,
+        .gm-style > div,
+        .gm-style > div > div {
+            background-color: transparent !important;
+        }
+        
+        /* Only the outer container should have the background */
+        .gm-style > div:first-child {
+            background-color: transparent !important;
         }
         
         /* --- Styles for Resizable Splitter --- */

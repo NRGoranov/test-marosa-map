@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBwTjcR5EHJL_BR63hZlnqZ1NdoLsg1M-c",
+    apiKey: "AIzaSyAgcp_hSnwDhgD0L1eZ4M5cir6SPKt-IfA",
     authDomain: "marosa-app.firebaseapp.com",
     projectId: "marosa-app",
     storageBucket: "marosa-app.firebasestorage.app",
@@ -14,3 +14,5 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
+// Export API key for use as fallback in Google Maps (same Google Cloud project)
+export const FIREBASE_API_KEY = firebaseConfig.apiKey;

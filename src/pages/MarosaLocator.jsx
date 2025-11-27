@@ -24,17 +24,64 @@ import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
 import BrochureLinkIcon from '../assets/icons/BrochureLinkIcon';
 import SearchIcon from '../assets/icons/SearchIcon';
 import { filterLocationsByQuery } from '../utils/searchUtils';
+import { FIREBASE_API_KEY } from '../firebase';
 import styles from './MarosaLocator.module.css';
 
+// Libraries array must be constant to prevent reload warnings
+const GOOGLE_MAPS_LIBRARIES = ['places'];
+
 function MarosaLocator() {
+    // Get API key from environment variable, fallback to Firebase key in development
+    const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const isDevelopment = import.meta.env.DEV;
+    
+    // Use env key if available, otherwise use Firebase key in development only
+    // Note: Firebase and Google Maps can share the same API key from the same Google Cloud project
+    const googleMapsApiKey = envApiKey && envApiKey.trim().length > 0 
+        ? envApiKey 
+        : (isDevelopment ? FIREBASE_API_KEY : '');
+    
+    const hasApiKey = googleMapsApiKey && googleMapsApiKey.trim().length > 0;
+
+    // Load Google Maps API
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        googleMapsApiKey: googleMapsApiKey,
+        libraries: GOOGLE_MAPS_LIBRARIES,
     });
+
+    // Log errors for debugging (only show warnings in production if key is missing)
+    useEffect(() => {
+        if (loadError) {
+            console.error('Google Maps API Load Error:', loadError);
+            if (!envApiKey && !isDevelopment) {
+                console.error('VITE_GOOGLE_MAPS_API_KEY environment variable is not set');
+            }
+        }
+    }, [loadError, envApiKey, isDevelopment]);
 
     const navigate = useNavigate();
 
     const { locations, allCities } = useLocationsData();
+    
+    // Filter locations with valid positions to prevent clustering errors
+    const validLocations = useMemo(() => {
+        if (!locations || locations.length === 0) return [];
+        return locations.filter(loc => {
+            // Check if position exists and has valid lat/lng
+            if (!loc.position) return false;
+            const { lat, lng } = loc.position;
+            return (
+                typeof lat === 'number' && 
+                !isNaN(lat) && 
+                typeof lng === 'number' && 
+                !isNaN(lng) &&
+                lat >= -90 && lat <= 90 &&
+                lng >= -180 && lng <= 180
+            );
+        });
+    }, [locations]);
+    
     const [map, setMap] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
     const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
@@ -67,7 +114,7 @@ function MarosaLocator() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const isDesktop = useMediaQuery('(min-width: 1024px)');
+    const isDesktop = useMediaQuery('(min-width: 1125px)');
 
     const markerClickRef = useRef(false);
 
@@ -127,8 +174,8 @@ function MarosaLocator() {
                 // Update visible locations based on current bounds after map moves
                 setTimeout(() => {
                     const bounds = map.getBounds();
-                    if (bounds && locations) {
-                        const visible = locations.filter(location => {
+                    if (bounds && validLocations) {
+                        const visible = validLocations.filter(location => {
                             if (!location.position) return false;
                             return bounds.contains(location.position);
                         });
@@ -158,7 +205,7 @@ function MarosaLocator() {
         setTimeout(() => {
             markerClickRef.current = false;
         }, 100);
-    }, [map, selectedPlace, locations]);
+    }, [map, selectedPlace, validLocations]);
 
     const handleShareClick = useCallback((location) => {
         const name = location.displayName?.text;
@@ -259,7 +306,7 @@ function MarosaLocator() {
     const initialZoom = useRef(7);
 
     const handleMapIdle = useCallback(() => {
-        if (!map || !locations || locations.length === 0) return;
+        if (!map || !validLocations || validLocations.length === 0) return;
 
         const bounds = map.getBounds();
         if (!bounds) return;
@@ -280,7 +327,7 @@ function MarosaLocator() {
         }
 
         // Filter locations within viewport bounds
-        const visible = locations.filter(location => {
+        const visible = validLocations.filter(location => {
             if (!location.position) return false;
             return bounds.contains(location.position);
         });
@@ -296,7 +343,7 @@ function MarosaLocator() {
         } else if (zoom <= 11 || !hasMapInteracted) {
             setShowLocationList(false);
         }
-    }, [map, locations, hasMapInteracted]);
+    }, [map, validLocations, hasMapInteracted]);
 
     // Handle smooth centralization for desktop location list after 3 seconds of inactivity
     useEffect(() => {
@@ -355,7 +402,7 @@ function MarosaLocator() {
 
             <StyleInjector />
 
-            <div className={styles.shell}>
+            <div className={`${styles.shell} ${isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 ? styles.shellWithShops : ''}`}>
                 {!isDesktop && (
                     <header className={`${styles.heroHeader} ${hasMapInteracted ? styles.heroHeaderFixed : ''}`}>
                         <div className={styles.heroHeaderInner}>
@@ -456,65 +503,98 @@ function MarosaLocator() {
                                 Онлайн магазин
                             </a>
                             <div className={styles.heroInner}>
-                        <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
-                            {(!isDesktop || !showLocationList) && (
-                                <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
-                            )}
-                            <h1 className={`${styles.heroTitle} ${isDesktop && showLocationList ? styles.heroTitleCompact : ''}`}>
-                                Lorem ipsum dolor sit amet <span className={styles.heroHighlight}>consectiur</span>
-                            </h1>
-                            <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
-                                <div className={styles.searchInput}>
-                                    <LocationSearchBar
-                                        query={searchQuery}
-                                        onQueryChange={(value) => {
-                                            setSearchQuery(value);
-                                            if (!hasMapInteracted && value) {
-                                                setHasMapInteracted(true);
-                                                setIsSearchOpen(true);
-                                            }
-                                        }}
-                                        onFocus={() => {
-                                            if (!hasMapInteracted) {
-                                                setHasMapInteracted(true);
-                                                setIsSearchOpen(true);
-                                                setShowLocationList(false);
-                                            }
-                                        }}
-                                        allLocations={locations}
-                                        allCities={allCities}
-                                        onCitySelect={handleCitySelect}
-                                        onLocationSelect={handleLocationSearchSelect}
-                                    />
+                        {isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 ? (
+                            <div className={styles.heroInnerContent}>
+                                <h3 className={styles.heroTitleCompact}>
+                                    Мароса вече е по-близо до теб.<br />Търси ни в<span className={styles.heroHighlight}>цялата страна</span>
+                                </h3>
+                                <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
+                                    <div className={styles.searchInput}>
+                                        <LocationSearchBar
+                                            query={searchQuery}
+                                            onQueryChange={(value) => {
+                                                setSearchQuery(value);
+                                                if (!hasMapInteracted && value) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                }
+                                            }}
+                                            onFocus={() => {
+                                                if (!hasMapInteracted) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                    setShowLocationList(false);
+                                                }
+                                            }}
+                                            allLocations={locations}
+                                            allCities={allCities}
+                                            onCitySelect={handleCitySelect}
+                                            onLocationSelect={handleLocationSearchSelect}
+                                        />
+                                    </div>
+                                    <button type="submit" className={styles.searchButton}>
+                                        Търси
+                                    </button>
+                                </form>
+                                <div className={styles.desktopLocationList}>
+                                    <div className={styles.desktopLocationListHeader}>
+                                        <h3 className={styles.desktopLocationListTitle}>
+                                            Обекти в изгледа ({visibleLocations.length})
+                                        </h3>
+                                    </div>
+                                    <div 
+                                        ref={desktopListScrollRef}
+                                        className={styles.desktopLocationListContent}
+                                    >
+                                        <LocationListWeb
+                                            locations={visibleLocations}
+                                            selectedPlaceId={selectedPlace?.id || selectedPlace?.placeId}
+                                            hoveredPlaceId={hoveredPlaceId}
+                                            onListItemClick={handleMarkerClick}
+                                            onListItemHover={setHoveredPlaceId}
+                                            onShareClick={handleShareClick}
+                                            isMobileView={false}
+                                            itemRefs={itemRefs}
+                                        />
+                                    </div>
                                 </div>
-                                <button type="submit" className={styles.searchButton}>
-                                    Търси
-                                </button>
-                            </form>
-                        </div>
-
-                        {isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 && (
-                            <div className={styles.desktopLocationList}>
-                                <div className={styles.desktopLocationListHeader}>
-                                    <h3 className={styles.desktopLocationListTitle}>
-                                        Обекти в изгледа ({visibleLocations.length})
-                                    </h3>
-                                </div>
-                                <div 
-                                    ref={desktopListScrollRef}
-                                    className={styles.desktopLocationListContent}
-                                >
-                                    <LocationListWeb
-                                        locations={visibleLocations}
-                                        selectedPlaceId={selectedPlace?.id || selectedPlace?.placeId}
-                                        hoveredPlaceId={hoveredPlaceId}
-                                        onListItemClick={handleMarkerClick}
-                                        onListItemHover={setHoveredPlaceId}
-                                        onShareClick={handleShareClick}
-                                        isMobileView={false}
-                                        itemRefs={itemRefs}
-                                    />
-                                </div>
+                            </div>
+                        ) : (
+                            <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
+                                {(!isDesktop || !showLocationList) && (
+                                    <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
+                                )}
+                                <h3 className={`${styles.heroTitle} ${isDesktop && showLocationList ? styles.heroTitleCompact : ''}`}>
+                                    Мароса вече е по-близо до теб.<br />Търси ни в<span className={styles.heroHighlight}>цялата страна</span>
+                                </h3>
+                                <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
+                                    <div className={styles.searchInput}>
+                                        <LocationSearchBar
+                                            query={searchQuery}
+                                            onQueryChange={(value) => {
+                                                setSearchQuery(value);
+                                                if (!hasMapInteracted && value) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                }
+                                            }}
+                                            onFocus={() => {
+                                                if (!hasMapInteracted) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                    setShowLocationList(false);
+                                                }
+                                            }}
+                                            allLocations={locations}
+                                            allCities={allCities}
+                                            onCitySelect={handleCitySelect}
+                                            onLocationSelect={handleLocationSearchSelect}
+                                        />
+                                    </div>
+                                    <button type="submit" className={styles.searchButton}>
+                                        Търси
+                                    </button>
+                                </form>
                             </div>
                         )}
 
@@ -562,12 +642,12 @@ function MarosaLocator() {
                     className={`${styles.mapSection} ${!isDesktop && hasMapInteracted ? 'hasMapInteracted' : ''}`}
                     aria-label="Интерактивна карта"
                 >
-                    {isLoaded ? (
+                    {isLoaded && !loadError && hasApiKey && typeof window !== 'undefined' && window.google && window.google.maps ? (
                         <div className={styles.mapSurface}>
                             <MapCanvas
                                 map={map}
                                 onLoad={onMapLoad}
-                                locations={locations}
+                                locations={validLocations}
                                 selectedPlace={selectedPlace}
                                 onMarkerClick={handleMarkerClick}
                                 onCloseInfoWindow={closeInfoWindow}
@@ -583,7 +663,23 @@ function MarosaLocator() {
                         </div>
                     ) : (
                         <div className={`${styles.mapSurface} ${styles.mapFallback}`}>
-                            {loadError ? 'Проблем при зареждане на картата' : 'Зареждане на картата...'}
+                            {!hasApiKey ? (
+                                <div>
+                                    <p>Грешка в конфигурацията</p>
+                                    <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
+                                        Google Maps API ключът не е конфигуриран
+                                    </p>
+                                </div>
+                            ) : loadError ? (
+                                <div>
+                                    <p>Проблем при зареждане на картата</p>
+                                    <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
+                                        Проверете конфигурацията на API ключа в Google Cloud Console
+                                    </p>
+                                </div>
+                            ) : (
+                                'Зареждане на картата...'
+                            )}
                         </div>
                     )}
                 </section>

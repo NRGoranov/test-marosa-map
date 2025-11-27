@@ -140,11 +140,11 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                 </div>
 
                 <div className="flex gap-4 border-b border-[#E6F2E2] pb-4">
-                    <div className="relative group">
+                    <div className="relative group overflow-hidden rounded-2xl rounded-tr-[80px]">
                         <img
                             src={imageUrl}
                             alt={locationName}
-                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
+                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl rounded-tr-[80px] object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
                             loading="lazy"
                             onError={(e) => {
                                 // Fallback if image fails to load

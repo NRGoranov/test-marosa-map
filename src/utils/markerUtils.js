@@ -30,6 +30,15 @@ export const createUserLocationMarker = () => {
 };
 
 export const getMarkerIcons = (isSelected, isHovered, placeDetails) => {
+    // Safety check: ensure Google Maps API is loaded
+    if (typeof window === 'undefined' || !window.google || !window.google.maps) {
+        // Return default sizes if Google Maps isn't loaded
+        const unselectedSize = { width: 66, height: 74 };
+        const activeSize = { width: 66, height: 74 };
+        const defaultIcon = createUnselectedMarkerIcon();
+        return { url: defaultIcon, size: unselectedSize };
+    }
+
     const unselectedIcon = createUnselectedMarkerIcon();
     const openIcon = createSelectedMarkerIcon(OPEN_COLOR);
     const closedIcon = createSelectedMarkerIcon(CLOSED_COLOR);
