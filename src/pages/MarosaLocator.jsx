@@ -24,23 +24,15 @@ import BurgerMenuIcon from '../assets/icons/BurgerMenuIcon';
 import BrochureLinkIcon from '../assets/icons/BrochureLinkIcon';
 import SearchIcon from '../assets/icons/SearchIcon';
 import { filterLocationsByQuery } from '../utils/searchUtils';
-import { FIREBASE_API_KEY } from '../firebase';
 import styles from './MarosaLocator.module.css';
 
 // Libraries array must be constant to prevent reload warnings
 const GOOGLE_MAPS_LIBRARIES = ['places'];
 
 function MarosaLocator() {
-    // Get API key from environment variable, fallback to Firebase key in development
-    const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    const isDevelopment = import.meta.env.DEV;
-    
-    // Use env key if available, otherwise use Firebase key in development only
-    // Note: Firebase and Google Maps can share the same API key from the same Google Cloud project
-    const googleMapsApiKey = envApiKey && envApiKey.trim().length > 0 
-        ? envApiKey 
-        : (isDevelopment ? FIREBASE_API_KEY : '');
-    
+    // Get API key from environment variable only
+    // For development, set VITE_GOOGLE_MAPS_API_KEY in .env file
+    const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
     const hasApiKey = googleMapsApiKey && googleMapsApiKey.trim().length > 0;
 
     // Load Google Maps API
@@ -50,15 +42,16 @@ function MarosaLocator() {
         libraries: GOOGLE_MAPS_LIBRARIES,
     });
 
-    // Log errors for debugging (only show warnings in production if key is missing)
+    // Log errors for debugging
     useEffect(() => {
         if (loadError) {
             console.error('Google Maps API Load Error:', loadError);
-            if (!envApiKey && !isDevelopment) {
+            if (!hasApiKey) {
                 console.error('VITE_GOOGLE_MAPS_API_KEY environment variable is not set');
+                console.error('Please set VITE_GOOGLE_MAPS_API_KEY in your .env file');
             }
         }
-    }, [loadError, envApiKey, isDevelopment]);
+    }, [loadError, hasApiKey]);
 
     const navigate = useNavigate();
 
