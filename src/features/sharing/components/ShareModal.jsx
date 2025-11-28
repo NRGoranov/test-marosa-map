@@ -122,9 +122,9 @@ const ShareModal = ({ isOpen, onClose, place }) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4 animate-fadeIn" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4 py-4 animate-fadeIn overflow-y-auto" onClick={onClose}>
             <div
-                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5 animate-scaleIn"
+                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5 animate-scaleIn my-auto"
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between">

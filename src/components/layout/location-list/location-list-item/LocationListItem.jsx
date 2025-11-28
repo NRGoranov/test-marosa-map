@@ -32,10 +32,10 @@ const LocationListItem = React.forwardRef(({
         return (
             <article
                 ref={ref}
-                className="bg-white rounded-[36px] shadow-[0_18px_60px_rgba(0,0,0,0.12)] p-4 cursor-pointer"
+                className="bg-white rounded-2xl rounded-tr-[80px] shadow-[0_18px_60px_rgba(0,0,0,0.12)] p-4 cursor-pointer"
                 onClick={onClick}
             >
-                <div className="relative rounded-[32px] overflow-hidden">
+                <div className="relative rounded-2xl rounded-tr-[80px] overflow-hidden">
                     <img
                         src={photoUrl}
                         alt={location.displayName?.text}

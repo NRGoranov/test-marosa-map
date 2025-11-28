@@ -12,9 +12,7 @@ import MapCanvas from '../features/map/components/MapCanvas';
 import ShareModal from '../features/sharing/components/ShareModal';
 import { useLocationsData } from '../features/locations/hooks/useLocationsData';
 import { useGeolocationGate } from '../features/geolocation/hooks/useGeolocationGate';
-import LocationList from '../features/locations/components/LocationList';
 import LocationListWeb from '../components/layout/location-list/LocationList';
-import CustomInfoWindowCard from '../features/map/components/CustomInfoWindowCard';
 import Logo from '../assets/icons/Logo';
 import SocialIcon from '../assets/icons/SocialIcon';
 import TikTokIcon from '../assets/icons/TikTokIcon';
@@ -245,6 +243,8 @@ function MarosaLocator() {
         event?.preventDefault?.();
         if (!searchQuery.trim()) return;
 
+        setIsMenuOpen(false);
+
         if (searchResults.locations.length > 0) {
             handleMarkerClick(searchResults.locations[0]);
             setSearchQuery('');
@@ -372,28 +372,52 @@ function MarosaLocator() {
                         className={`${styles.heroHeader} ${hasMapInteracted ? styles.heroHeaderFixed : ''}`}
                     >
                         <div className={styles.heroHeaderInner}>
-                            <div className={styles.heroHeaderLogo}>
+                            <div 
+                                className={styles.heroHeaderLogo}
+                                onClick={() => window.location.reload()}
+                                style={{ cursor: 'pointer' }}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Refresh page"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        window.location.reload();
+                                    }
+                                }}
+                            >
                                 <Logo />
                             </div>
                         {hasMapInteracted && !isDesktop && (
                             <div className={`${styles.headerSearchFullWidth} ${isSearchOpen ? styles.active : ''}`}>
                                 <LocationSearchBar
                                     query={searchQuery}
-                                    onQueryChange={setSearchQuery}
+                                    onQueryChange={(value) => {
+                                        setSearchQuery(value);
+                                        setIsMenuOpen(false);
+                                    }}
                                     allLocations={locations}
                                     allCities={allCities}
                                     onCitySelect={(cityName) => {
                                         handleCitySelect(cityName);
                                         setIsSearchOpen(false);
+                                        setIsMenuOpen(false);
                                     }}
                                     onLocationSelect={(location) => {
                                         handleLocationSearchSelect(location);
                                         setIsSearchOpen(false);
+                                        setIsMenuOpen(false);
                                     }}
                                     showCloseButton={true}
-                                    onClose={() => setIsSearchOpen(false)}
+                                    onClose={() => {
+                                        setIsSearchOpen(false);
+                                        setIsMenuOpen(false);
+                                    }}
                                     compact={true}
-                                    onFocus={() => setIsSearchOpen(true)}
+                                    onFocus={() => {
+                                        setIsSearchOpen(true);
+                                        setIsMenuOpen(false);
+                                    }}
                                 />
                             </div>
                         )}
@@ -426,7 +450,10 @@ function MarosaLocator() {
                                 <button
                                     type="button"
                                     className={styles.searchIconButton}
-                                    onClick={() => setIsSearchOpen(true)}
+                                    onClick={() => {
+                                        setIsSearchOpen(true);
+                                        setIsMenuOpen(false);
+                                    }}
                                     aria-label="Търси"
                                 >
                                     <SearchIcon />
@@ -482,12 +509,14 @@ function MarosaLocator() {
                                         query={searchQuery}
                                         onQueryChange={(value) => {
                                             setSearchQuery(value);
+                                            setIsMenuOpen(false);
                                             if (!hasMapInteracted && value) {
                                                 setHasMapInteracted(true);
                                                 setIsSearchOpen(true);
                                             }
                                         }}
                                         onFocus={() => {
+                                            setIsMenuOpen(false);
                                             if (!hasMapInteracted) {
                                                 setHasMapInteracted(true);
                                                 setIsSearchOpen(true);
@@ -496,8 +525,14 @@ function MarosaLocator() {
                                         }}
                                         allLocations={locations}
                                         allCities={allCities}
-                                        onCitySelect={handleCitySelect}
-                                        onLocationSelect={handleLocationSearchSelect}
+                                        onCitySelect={(cityName) => {
+                                            handleCitySelect(cityName);
+                                            setIsMenuOpen(false);
+                                        }}
+                                        onLocationSelect={(location) => {
+                                            handleLocationSearchSelect(location);
+                                            setIsMenuOpen(false);
+                                        }}
                                     />
                                 </div>
                                 <button type="submit" className={styles.searchButton}>
@@ -625,36 +660,17 @@ function MarosaLocator() {
                 place={locationToShare}
             />
 
-            {!isDesktop && selectedPlace && (
-                <div 
-                    className={styles.mobileShopCard}
-                    onClick={(e) => {
-                        if (e.target === e.currentTarget) {
-                            setSelectedPlace(null);
-                        }
-                    }}
-                >
-                    <div className={styles.mobileShopCardContent}>
-                        <button
-                            type="button"
-                            onClick={() => setSelectedPlace(null)}
-                            className={styles.mobileShopCardClose}
-                            aria-label="Затвори"
-                        >
-                            ×
-                        </button>
-                        <CustomInfoWindowCard
-                            location={selectedPlace}
-                            onClose={() => setSelectedPlace(null)}
-                            onShareClick={handleShareClick}
-                        />
-                    </div>
-                </div>
-            )}
-
             {!isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 && (() => {
                 const vh = viewportHeight;
                 const partialHeightCalc = vh * 0.5;
+                
+                // Sort to show selected location first
+                const sortedLocations = selectedPlace 
+                    ? [
+                        visibleLocations.find(loc => loc.id === selectedPlace.id),
+                        ...visibleLocations.filter(loc => loc.id !== selectedPlace.id)
+                      ].filter(Boolean)
+                    : visibleLocations;
                 
                 const getPositionY = () => {
                     // Position from top of viewport
@@ -775,13 +791,15 @@ function MarosaLocator() {
                                 }
                             }}
                         >
-                            <LocationList
-                                locations={visibleLocations}
+                            <LocationListWeb
+                                locations={sortedLocations}
                                 selectedPlaceId={selectedPlace?.id}
                                 hoveredPlaceId={hoveredPlaceId}
-                                onSelect={handleMarkerClick}
-                                onHover={setHoveredPlaceId}
-                                onShare={handleShareClick}
+                                onListItemClick={handleMarkerClick}
+                                onListItemHover={setHoveredPlaceId}
+                                onShareClick={handleShareClick}
+                                isMobileView={true}
+                                itemRefs={itemRefs}
                             />
                         </div>
                     </div>
