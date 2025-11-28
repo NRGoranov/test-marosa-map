@@ -55,17 +55,27 @@ function MarosaLocator() {
     const desktopListScrollRef = useRef(null);
     const [viewportHeight, setViewportHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
     
-    const headerHeight = 80;
+    const [headerHeight, setHeaderHeight] = useState(80);
+    const headerRef = useRef(null);
     const peekHeight = 120;
     
-    // Update viewport height on resize
+    // Update viewport height and header height on resize
     useEffect(() => {
         const handleResize = () => {
-            setViewportHeight(window.innerHeight);
+            setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+            if (headerRef.current) {
+                setHeaderHeight(headerRef.current.offsetHeight);
+            }
         };
+        
+        // Initial measurement
+        handleResize();
+        
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const mobileMapHeight = viewportHeight - headerHeight;
 
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
@@ -357,7 +367,10 @@ function MarosaLocator() {
 
             <div className={styles.shell}>
                 {!isDesktop && (
-                    <header className={`${styles.heroHeader} ${hasMapInteracted ? styles.heroHeaderFixed : ''}`}>
+                    <header 
+                        ref={headerRef}
+                        className={`${styles.heroHeader} ${hasMapInteracted ? styles.heroHeaderFixed : ''}`}
+                    >
                         <div className={styles.heroHeaderInner}>
                             <div className={styles.heroHeaderLogo}>
                                 <Logo />
@@ -561,6 +574,10 @@ function MarosaLocator() {
                 <section 
                     className={`${styles.mapSection} ${!isDesktop && hasMapInteracted ? 'hasMapInteracted' : ''}`}
                     aria-label="Интерактивна карта"
+                    style={!isDesktop && hasMapInteracted ? { 
+                        height: `${mobileMapHeight}px`,
+                        marginTop: `${headerHeight}px`
+                    } : undefined}
                 >
                     {isLoaded ? (
                         <div className={styles.mapSurface}>
