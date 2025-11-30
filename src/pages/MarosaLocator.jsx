@@ -561,7 +561,9 @@ function MarosaLocator() {
                         <div className={styles.decorMidRight} aria-hidden="true" />
 
                         <section className={`${styles.heroSection} ${isDesktop && showLocationList ? styles.heroSectionCompact : ''}`}>
-                            <div className={styles.heroBackdrop} aria-hidden="true" />
+                            {isDesktop && (
+                                <div className={styles.heroBackdrop} aria-hidden="true" />
+                            )}
                             <div className={styles.heroBackdropTopRight} aria-hidden="true" />
                             {isDesktop && (
                                 <div className={styles.heroLogo}>
@@ -580,6 +582,9 @@ function MarosaLocator() {
                         <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
                             <div style={{ marginBottom: '100px', width: '100%', position: 'relative' }}>
                                 <div className={styles.decorBottomLeft} aria-hidden="true" />
+                                {!isDesktop && (
+                                    <div className={styles.heroBackdrop} aria-hidden="true" />
+                                )}
                                 {(!isDesktop || !showLocationList) && (
                                     <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
                                 )}
