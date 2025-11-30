@@ -123,10 +123,12 @@
     right: 0;
     bottom: 0;
     height: 50vh;
+    padding-top: 60px;
     z-index: 50 !important;
     pointer-events: none;
-    padding: 0;
-    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
   }
   
   .mapSection:not(.hasMapInteracted) .mapSurface {
