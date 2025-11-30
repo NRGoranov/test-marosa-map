@@ -578,7 +578,8 @@ function MarosaLocator() {
                             </a>
                             <div className={styles.heroInner}>
                         <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
-                            <div style={{ marginBottom: '100px', width: '100%' }}>
+                            <div style={{ marginBottom: '100px', width: '100%', position: 'relative' }}>
+                                <div className={styles.decorBottomLeft} aria-hidden="true" />
                                 {(!isDesktop || !showLocationList) && (
                                     <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
                                 )}

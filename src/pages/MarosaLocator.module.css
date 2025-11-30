@@ -39,6 +39,11 @@
   right: -60px;
 }
 
+.decorBottomLeft {
+  bottom: -140px;
+  left: -60px;
+}
+
 .decorTopRight {
   top: -70px;
   right: -120px;
