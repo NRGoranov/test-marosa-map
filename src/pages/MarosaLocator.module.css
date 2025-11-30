@@ -375,7 +375,8 @@
 
 @media (max-width: 1023px) {
   .heroBackdrop {
-    bottom: -20%;
+    top: 100%;
+    bottom: auto;
     left: -15%;
     width: 130%;
     height: 220px;
