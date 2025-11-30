@@ -377,9 +377,9 @@
   .heroBackdrop {
     top: 100%;
     bottom: auto;
-    left: 10%;
-    width: 120%;
-    height: 200px;
+    left: -30%;
+    width: 130%;
+    height: 220px;
   }
 
   .heroBackdropTopRight {
