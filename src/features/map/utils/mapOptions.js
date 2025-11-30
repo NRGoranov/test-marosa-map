@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 
-export const mapContainerStyle = { width: '100%', height: '100%' };
+export const mapContainerStyle = { 
+    width: '100%', 
+    height: '100%',
+    backgroundColor: 'transparent'
+};
 
 const baseOptions = {
     disableDefaultUI: true,
@@ -13,6 +17,7 @@ const baseOptions = {
 export function useMapOptions() {
     return useMemo(() => baseOptions, []);
 }
+
 
 
 

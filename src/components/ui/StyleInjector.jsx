@@ -29,6 +29,39 @@ const StyleInjector = () => (
             display: none !important;
         }
         
+        /* Make Google Maps fill entire component with rounded top corners */
+        .mapSection:not(.hasMapInteracted) .mapSurface > div {
+            width: 100% !important;
+            height: 100% !important;
+            border-top-left-radius: 24px !important;
+            border-top-right-radius: 24px !important;
+            overflow: hidden !important;
+        }
+        
+        .mapSection:not(.hasMapInteracted) .mapSurface > div > div {
+            width: 100% !important;
+            height: 100% !important;
+            border-top-left-radius: 24px !important;
+            border-top-right-radius: 24px !important;
+            overflow: hidden !important;
+        }
+        
+        .mapSection:not(.hasMapInteracted) .gm-style,
+        .mapSection:not(.hasMapInteracted) .gm-style > div:first-child,
+        .mapSection:not(.hasMapInteracted) .gm-style > div > div {
+            width: 100% !important;
+            height: 100% !important;
+            border-top-left-radius: 24px !important;
+            border-top-right-radius: 24px !important;
+            overflow: hidden !important;
+        }
+        
+        /* Ensure map canvas fills the space */
+        .mapSection:not(.hasMapInteracted) canvas {
+            border-top-left-radius: 24px !important;
+            border-top-right-radius: 24px !important;
+        }
+        
         /* --- Styles for Resizable Splitter --- */
         .gutter {
             background-color: #F7F7F7;

@@ -13,6 +13,7 @@ import ShareModal from '../features/sharing/components/ShareModal';
 import { useLocationsData } from '../features/locations/hooks/useLocationsData';
 import { useGeolocationGate } from '../features/geolocation/hooks/useGeolocationGate';
 import LocationListWeb from '../components/layout/location-list/LocationList';
+import BackToMapButton from '../components/ui/BackToMapButton';
 import Logo from '../assets/icons/Logo';
 import SocialIcon from '../assets/icons/SocialIcon';
 import TikTokIcon from '../assets/icons/TikTokIcon';
@@ -51,6 +52,7 @@ function MarosaLocator() {
     const listStartY = useRef(0);
     const itemRefs = useRef({});
     const desktopListScrollRef = useRef(null);
+    const mobileListContentRef = useRef(null);
     const [viewportHeight, setViewportHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
     
     const [headerHeight, setHeaderHeight] = useState(80);
@@ -78,6 +80,8 @@ function MarosaLocator() {
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
     const markerClickRef = useRef(false);
+    const selectedPlaceZoomRef = useRef(null);
+    const selectedPlacePositionRef = useRef(null);
 
     const {
         currentUserPosition,
@@ -107,6 +111,8 @@ function MarosaLocator() {
 
     const closeInfoWindow = useCallback(() => {
         setSelectedPlace(null);
+        selectedPlaceZoomRef.current = null;
+        selectedPlacePositionRef.current = null;
     }, []);
 
     const handleMapClick = useCallback(() => {
@@ -123,14 +129,35 @@ function MarosaLocator() {
         markerClickRef.current = true;
 
         if (selectedPlace?.id === place.id) {
+            // Toggle: if clicking the same shop, deselect but keep list open
             setSelectedPlace(null);
+            selectedPlaceZoomRef.current = null;
+            selectedPlacePositionRef.current = null;
         } else {
+            // Set selected place and show list first
+            setSelectedPlace(place);
+            setHasMapInteracted(true);
+            setShowLocationList(true);
+            
             // Immediately show at least the clicked location
             setVisibleLocations([place]);
+            
+            // On mobile, set to 'partial' to show more of the list so the clicked shop is visible
+            const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 1024;
+            if (isMobileDevice) {
+                setListPosition('partial');
+            } else {
+                setListPosition('peek');
+            }
+            setListDragY(0);
             
             if (map) {
                 map.panTo(place.position);
                 map.setZoom(14);
+                
+                // Store the zoom level and position when marker is clicked
+                selectedPlaceZoomRef.current = 14;
+                selectedPlacePositionRef.current = place.position;
                 
                 // Update visible locations based on current bounds after map moves
                 setTimeout(() => {
@@ -147,17 +174,21 @@ function MarosaLocator() {
                 }, 300);
             }
             
-            setSelectedPlace(place);
-            setHasMapInteracted(true);
-            setShowLocationList(true);
-            setListPosition('peek');
-            setListDragY(0);
+            // Scroll mobile list content to top to show the clicked shop (which is first in sorted list)
+            if (isMobileDevice) {
+                setTimeout(() => {
+                    if (mobileListContentRef.current) {
+                        mobileListContentRef.current.scrollTop = 0;
+                    }
+                }, 200);
+            }
             
             if (import.meta.env.DEV) {
                 console.log('Marker clicked:', {
                     place,
                     showLocationList: true,
-                    listPosition: 'peek'
+                    listPosition: isMobileDevice ? 'partial' : 'peek',
+                    isMobileDevice
                 });
             }
         }
@@ -289,6 +320,38 @@ function MarosaLocator() {
             }
         }
 
+        // Close info window if zoomed out or moved away from selected place
+        if (selectedPlace && selectedPlaceZoomRef.current !== null && selectedPlacePositionRef.current) {
+            const shouldClose = (() => {
+                // Check if zoomed out significantly (more than 2 levels)
+                if (zoom < selectedPlaceZoomRef.current - 2) {
+                    return true;
+                }
+
+                // Check if selected place is no longer in viewport bounds
+                if (!bounds.contains(selectedPlacePositionRef.current)) {
+                    return true;
+                }
+
+                // Check if map center has moved far away from selected place
+                // Using approximate distance: ~0.45 degrees ≈ 50km
+                if (center && selectedPlacePositionRef.current) {
+                    const latDiff = Math.abs(center.lat() - selectedPlacePositionRef.current.lat);
+                    const lngDiff = Math.abs(center.lng() - selectedPlacePositionRef.current.lng);
+                    // If center moved more than ~50km away, close the info window
+                    if (latDiff > 0.45 || lngDiff > 0.45) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })();
+
+            if (shouldClose) {
+                closeInfoWindow();
+            }
+        }
+
         // Filter locations within viewport bounds
         const visible = locations.filter(location => {
             if (!location.position) return false;
@@ -299,14 +362,32 @@ function MarosaLocator() {
 
         // Show location list if zoomed in enough (zoom > 11) and there are visible locations
         // Only show if map has been interacted with (not just initial load)
+        // Don't override if a shop was just clicked (selectedPlace exists)
         if (hasMapInteracted && zoom > 11 && visible.length > 0) {
-            setShowLocationList(true);
-            setListPosition('peek');
-            setListDragY(0);
-        } else if (zoom <= 11 || !hasMapInteracted) {
+            // Only auto-show list if no shop is currently selected (to avoid interfering with manual clicks)
+            if (!selectedPlace) {
+                setShowLocationList(true);
+                setListPosition('peek');
+                setListDragY(0);
+            }
+        } else if ((zoom <= 11 || !hasMapInteracted) && !selectedPlace) {
+            // Only hide list if no shop is selected
             setShowLocationList(false);
         }
-    }, [map, locations, hasMapInteracted]);
+    }, [map, locations, hasMapInteracted, selectedPlace, closeInfoWindow, visibleLocations]);
+
+    // Scroll mobile list to top when a shop is clicked
+    useEffect(() => {
+        if (!isDesktop && showLocationList && selectedPlace && mobileListContentRef.current) {
+            // Small delay to ensure the list is rendered
+            const timer = setTimeout(() => {
+                if (mobileListContentRef.current) {
+                    mobileListContentRef.current.scrollTop = 0;
+                }
+            }, 200);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedPlace, showLocationList, isDesktop]);
 
     // Handle smooth centralization for desktop location list after 3 seconds of inactivity
     useEffect(() => {
@@ -479,7 +560,7 @@ function MarosaLocator() {
                         <div className={styles.decorTopRight} aria-hidden="true" />
                         <div className={styles.decorMidRight} aria-hidden="true" />
 
-                        <section className={styles.heroSection}>
+                        <section className={`${styles.heroSection} ${isDesktop && showLocationList ? styles.heroSectionCompact : ''}`}>
                             <div className={styles.heroBackdrop} aria-hidden="true" />
                             <div className={styles.heroBackdropTopRight} aria-hidden="true" />
                             {isDesktop && (
@@ -607,7 +688,7 @@ function MarosaLocator() {
 
 
                 <section 
-                    className={`${styles.mapSection} ${!isDesktop && hasMapInteracted ? 'hasMapInteracted' : ''}`}
+                    className={`${styles.mapSection} ${!isDesktop && hasMapInteracted ? 'hasMapInteracted' : ''} ${isDesktop && showLocationList ? styles.mapSectionExpanded : ''}`}
                     aria-label="Интерактивна карта"
                     style={!isDesktop && hasMapInteracted ? { 
                         height: `${mobileMapHeight}px`,
@@ -659,6 +740,29 @@ function MarosaLocator() {
                 onClose={() => setLocationToShare(null)}
                 place={locationToShare}
             />
+
+            {!isDesktop && (
+                !!locationToShare || 
+                isSearchOpen || 
+                isMenuOpen || 
+                (showLocationList && (listPosition === 'partial' || listPosition === 'full'))
+            ) && (
+                <BackToMapButton
+                    onClick={() => {
+                        if (!!locationToShare) {
+                            setLocationToShare(null);
+                        } else if (isSearchOpen) {
+                            setIsSearchOpen(false);
+                        } else if (isMenuOpen) {
+                            setIsMenuOpen(false);
+                        } else if (showLocationList && (listPosition === 'partial' || listPosition === 'full')) {
+                            // Push the list down to peek mode instead of hiding it
+                            setListPosition('peek');
+                            setListDragY(0);
+                        }
+                    }}
+                />
+            )}
 
             {!isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 && (() => {
                 const vh = viewportHeight;
@@ -783,6 +887,7 @@ function MarosaLocator() {
                             </h3>
                         </div>
                         <div 
+                            ref={mobileListContentRef}
                             className={styles.mobileLocationListContent}
                             onTouchStart={(e) => {
                                 // Allow scrolling in content, but prevent drag if scrolling
