@@ -99,7 +99,7 @@ const LocationListItem = React.forwardRef(({
             {/* Image Section */}
             <div
                 onClick={onClick}
-                className="relative w-full h-[180px] overflow-hidden cursor-pointer"
+                className="relative w-full h-[180px] overflow-hidden cursor-pointer rounded-t-2xl rounded-tr-[80px] rounded-b-2xl"
             >
                 <img
                     src={photoUrl}
