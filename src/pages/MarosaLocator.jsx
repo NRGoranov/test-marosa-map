@@ -578,48 +578,50 @@ function MarosaLocator() {
                             </a>
                             <div className={styles.heroInner}>
                         <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
-                            {(!isDesktop || !showLocationList) && (
-                                <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
-                            )}
-                            <h1 className={`${styles.heroTitle} ${isDesktop && showLocationList ? styles.heroTitleCompact : ''}`}>
-                                Lorem ipsum dolor sit amet <span className={styles.heroHighlight}>consectiur</span>
-                            </h1>
-                            <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
-                                <div className={styles.searchInput}>
-                                    <LocationSearchBar
-                                        query={searchQuery}
-                                        onQueryChange={(value) => {
-                                            setSearchQuery(value);
-                                            setIsMenuOpen(false);
-                                            if (!hasMapInteracted && value) {
-                                                setHasMapInteracted(true);
-                                                setIsSearchOpen(true);
-                                            }
-                                        }}
-                                        onFocus={() => {
-                                            setIsMenuOpen(false);
-                                            if (!hasMapInteracted) {
-                                                setHasMapInteracted(true);
-                                                setIsSearchOpen(true);
-                                                setShowLocationList(false);
-                                            }
-                                        }}
-                                        allLocations={locations}
-                                        allCities={allCities}
-                                        onCitySelect={(cityName) => {
-                                            handleCitySelect(cityName);
-                                            setIsMenuOpen(false);
-                                        }}
-                                        onLocationSelect={(location) => {
-                                            handleLocationSearchSelect(location);
-                                            setIsMenuOpen(false);
-                                        }}
-                                    />
-                                </div>
-                                <button type="submit" className={styles.searchButton}>
-                                    Търси
-                                </button>
-                            </form>
+                            <div style={{ marginBottom: '20px', width: '100%' }}>
+                                {(!isDesktop || !showLocationList) && (
+                                    <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
+                                )}
+                                <h1 className={`${styles.heroTitle} ${isDesktop && showLocationList ? styles.heroTitleCompact : ''}`}>
+                                    Мароса вече е по-близо до теб.<br />Търси ни в<span className={styles.heroHighlight}>цялата страна</span>
+                                </h1>
+                                <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
+                                    <div className={styles.searchInput}>
+                                        <LocationSearchBar
+                                            query={searchQuery}
+                                            onQueryChange={(value) => {
+                                                setSearchQuery(value);
+                                                setIsMenuOpen(false);
+                                                if (!hasMapInteracted && value) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                }
+                                            }}
+                                            onFocus={() => {
+                                                setIsMenuOpen(false);
+                                                if (!hasMapInteracted) {
+                                                    setHasMapInteracted(true);
+                                                    setIsSearchOpen(true);
+                                                    setShowLocationList(false);
+                                                }
+                                            }}
+                                            allLocations={locations}
+                                            allCities={allCities}
+                                            onCitySelect={(cityName) => {
+                                                handleCitySelect(cityName);
+                                                setIsMenuOpen(false);
+                                            }}
+                                            onLocationSelect={(location) => {
+                                                handleLocationSearchSelect(location);
+                                                setIsMenuOpen(false);
+                                            }}
+                                        />
+                                    </div>
+                                    <button type="submit" className={styles.searchButton}>
+                                        Търси
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
                         {isDesktop && showLocationList && visibleLocations && visibleLocations.length > 0 && (
@@ -749,7 +751,7 @@ function MarosaLocator() {
             ) && (
                 <BackToMapButton
                     onClick={() => {
-                        if (!!locationToShare) {
+                        if (locationToShare) {
                             setLocationToShare(null);
                         } else if (isSearchOpen) {
                             setIsSearchOpen(false);
