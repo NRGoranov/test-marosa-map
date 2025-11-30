@@ -136,7 +136,7 @@ const LocationListItem = React.forwardRef(({
                 {/* Store Name */}
                 <h3
                     onClick={onClick}
-                    className="font-bold text-[16px] text-[#1B4712] font-['Montserrat',sans-serif] leading-tight cursor-pointer break-words line-clamp-2 overflow-hidden"
+                    className="font-bold text-[14px] text-[#1B4712] font-['Montserrat',sans-serif] leading-tight cursor-pointer break-words line-clamp-2 overflow-hidden"
                     style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
                 >
                     {location.displayName?.text}
