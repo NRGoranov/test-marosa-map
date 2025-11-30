@@ -124,7 +124,7 @@ const ShareModal = ({ isOpen, onClose, place }) => {
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4 py-4 animate-fadeIn overflow-y-auto" onClick={onClose}>
             <div
-                className="bg-white rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5 animate-scaleIn my-auto"
+                className="bg-white rounded-2xl rounded-tr-[80px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-6 space-y-5 animate-scaleIn my-auto"
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between">
@@ -169,7 +169,7 @@ const ShareModal = ({ isOpen, onClose, place }) => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {shareOptions.map((option) => {
-                        const baseClasses = `group flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all duration-300 ${
+                        const baseClasses = `group flex items-center gap-3 rounded-xl rounded-tr-[40px] border px-3 py-2 text-left transition-all duration-300 ${
                             option.highlight 
                                 ? 'border-[#1B4712] bg-[#EAF6E7] scale-105' 
                                 : 'border-[#E6F2E2] bg-white hover:border-[#C9F0C2] hover:bg-[#F5FBF3] hover:shadow-md hover:scale-105 active:scale-95'
