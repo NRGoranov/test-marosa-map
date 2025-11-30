@@ -578,6 +578,7 @@
   background: #dff6d7;
   border-radius: 999px;
   padding: 0.2rem 0.8rem;
+  white-space: nowrap;
 }
 
 .searchRow {
