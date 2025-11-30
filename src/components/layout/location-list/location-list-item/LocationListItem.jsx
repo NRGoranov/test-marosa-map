@@ -132,7 +132,7 @@ const LocationListItem = React.forwardRef(({
             </div>
 
             {/* Content Section */}
-            <div className={`bg-white px-6 pt-5 pb-6 space-y-3 min-w-0 overflow-hidden`}>
+            <div className={`bg-white px-6 pt-5 pb-6 space-y-3 min-w-0 overflow-hidden rounded-b-2xl`}>
                 {/* Store Name */}
                 <h3
                     onClick={onClick}
