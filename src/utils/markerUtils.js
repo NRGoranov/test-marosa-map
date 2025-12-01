@@ -50,6 +50,6 @@ export const getMarkerIcons = (isSelected, isHovered, placeDetails) => {
             return { url: openIcon, size: activeSize };
         }
     }
-    
+
     return { url: closedIcon, size: activeSize };
 };

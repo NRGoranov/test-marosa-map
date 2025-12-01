@@ -16,6 +16,7 @@ import SlideDownMenu from "../../ui/SlideDownMenu";
 import ShareIcon from "../../../assets/icons/ShareIcon";
 import ChevronLeftIcon from "../../../assets/icons/ChevronLeftIcon";
 import ChevronRightIcon from "../../../assets/icons/ChevronRightIcon";
+import BackToMapButton from "../../ui/BackToMapButton";
 
 const MobileBrochureView = () => {
     const navigate = useNavigate();
@@ -287,6 +288,16 @@ const MobileBrochureView = () => {
                         </TransformWrapper>
                     </div>
                 </div>
+            )}
+
+            {(isMenuOpen || isZoomed) && (
+                <BackToMapButton
+                    onClick={() => {
+                        setIsMenuOpen(false);
+                        setIsZoomed(false);
+                        handleExit();
+                    }}
+                />
             )}
         </div>
     );

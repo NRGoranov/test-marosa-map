@@ -2,7 +2,17 @@ import React from 'react';
 
 import MapButton from './MapButton';
 
-const CustomZoomControl = ({ map, onToggleFullscreen, isFullscreen }) => {
+const controlStyles = {
+    position: 'absolute',
+    right: '20px',
+    bottom: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    zIndex: 5,
+};
+
+const CustomZoomControl = ({ map }) => {
     const handleZoomIn = () => {
         if (map) {
             const currentZoom = map.getZoom();
@@ -17,23 +27,15 @@ const CustomZoomControl = ({ map, onToggleFullscreen, isFullscreen }) => {
         }
     };
 
-    const containerStyle = {
-        position: 'absolute',
-        right: '20px',
-        top: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        zIndex: 5,
-    };
-
     return (
-        <div style={containerStyle}>
+        <div style={controlStyles}>
             <MapButton onClick={handleZoomIn} type="in" />
             <MapButton onClick={handleZoomOut} type="out" />
-            <MapButton onClick={onToggleFullscreen} type="fullscreen" isFullscreen={isFullscreen} />
         </div>
     );
 };
 
 export default CustomZoomControl;
+
+
+

@@ -1,0 +1,78 @@
+.backToMapButton {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 56px;
+    border-radius: 36px;
+    padding: 16px 24px;
+    gap: 10px;
+    background: #00562A;
+    box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.74);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 10px;
+    z-index: 10000 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    visibility: visible !important;
+}
+
+.backToMapButton:hover {
+    transform: translateX(-50%) scale(1.05);
+}
+
+.backToMapButton:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* Use exact pixel positioning if screen is tall enough (for design mockup compliance) */
+@media (min-height: 884px) {
+    .backToMapButton {
+        top: 828px;
+        bottom: auto;
+        left: 145px;
+        transform: none;
+    }
+    
+    .backToMapButton:hover {
+        transform: scale(1.05);
+    }
+    
+    .backToMapButton:active {
+        transform: scale(0.95);
+    }
+}
+
+.buttonText {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: white;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.mapIcon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    fill: white;
+}
+
+/* Only show on mobile for map page - but always show on brochure page */
+/* Desktop restriction is handled at component level if needed */

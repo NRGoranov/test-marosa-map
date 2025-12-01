@@ -35,9 +35,9 @@ const getIcon = (type, isFullscreen, iconStyle) => {
         default:
             return null;
     }
-}
+};
 
-const ZoomButton = ({ onClick, type, isFullscreen = false }) => {
+const MapButton = ({ onClick, type, isFullscreen = false }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const style = {
@@ -72,4 +72,7 @@ const ZoomButton = ({ onClick, type, isFullscreen = false }) => {
     );
 };
 
-export default ZoomButton;
+export default MapButton;
+
+
+
