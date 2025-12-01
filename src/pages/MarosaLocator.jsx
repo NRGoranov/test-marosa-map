@@ -580,7 +580,7 @@ function MarosaLocator() {
                             </a>
                             <div className={styles.heroInner}>
                         <div className={`${styles.heroBody} ${isDesktop && showLocationList ? styles.heroBodyCompact : ''}`}>
-                            <div style={{ marginBottom: '100px', width: '100vw', position: 'relative', marginLeft: 'calc(-50vw + 50%)' }}>
+                            <div style={{ marginBottom: '100px', width: '100%', position: 'relative' }}>
                                 <div className={styles.decorBottomLeft} aria-hidden="true" />
                                 {!isDesktop && (
                                     <div className={styles.heroBackdrop} aria-hidden="true" />
