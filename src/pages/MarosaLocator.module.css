@@ -380,6 +380,7 @@
     left: -30%;
     width: 130%;
     height: 220px;
+    z-index: 5;
   }
 
   .heroBackdropTopRight {
