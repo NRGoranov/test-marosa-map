@@ -1,5 +1,5 @@
 import React from 'react';
-import MapIcon from '../../assets/icons/MapIcon';
+import MapIcon from '@mui/icons-material/Map';
 import styles from './BackToMapButton.module.css';
 
 const BackToMapButton = ({ onClick }) => {

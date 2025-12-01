@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FiCopy, FiMail, FiX } from 'react-icons/fi';
 import { FaViber, FaFacebookMessenger } from 'react-icons/fa';
+import MapIcon from '@mui/icons-material/Map';
 
 import StarRating from '../../../assets/StarRating';
 import { checkIfOpen } from '../../../utils/timeUtils';
@@ -215,16 +216,22 @@ const ShareModal = ({ isOpen, onClose, place }) => {
 
                 <div className="flex gap-4 border-b border-[#E6F2E2] pb-5">
                     <div className="relative group">
-                        <img
-                            src={imageUrl}
-                            alt={locationName}
-                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
-                            loading="lazy"
-                            onError={(e) => {
-                                // Fallback if image fails to load
-                                e.target.src = 'https://i.imgur.com/g2a4JAh.png';
-                            }}
-                        />
+                        {imageUrl && imageUrl !== 'https://i.imgur.com/g2a4JAh.png' ? (
+                            <img
+                                src={imageUrl}
+                                alt={locationName}
+                                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
+                                loading="lazy"
+                                onError={(e) => {
+                                    // Fallback if image fails to load
+                                    e.target.src = 'https://i.imgur.com/g2a4JAh.png';
+                                }}
+                            />
+                        ) : (
+                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#E6F2E2] bg-[#F5FBF3] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer">
+                                <MapIcon className="w-12 h-12 sm:w-14 sm:h-14 text-[#1B4712]" />
+                            </div>
+                        )}
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2">

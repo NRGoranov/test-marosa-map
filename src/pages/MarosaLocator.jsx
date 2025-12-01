@@ -234,7 +234,8 @@ function MarosaLocator() {
             displayName: { text: name },
             rating: location.rating || 5,
             mapsUrl: finalMapsUrl,
-            imageUrl: imageUrl
+            imageUrl: imageUrl,
+            icon: location.icon // Explicitly preserve the icon property
         };
 
         setLocationToShare(comprehensiveLocationData);
