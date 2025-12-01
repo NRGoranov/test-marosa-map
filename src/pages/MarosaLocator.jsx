@@ -499,6 +499,8 @@ function MarosaLocator() {
                                         setIsSearchOpen(true);
                                         setIsMenuOpen(false);
                                     }}
+                                    isMobileSearchOpen={isSearchOpen}
+                                    headerHeight={headerHeight}
                                 />
                             </div>
                         )}

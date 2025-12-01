@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 import SearchInput from '../../../components/ui/SearchInput';
 import { filterLocationsByQuery } from '../../../utils/searchUtils';
@@ -53,6 +54,8 @@ const LocationSearchBar = ({
     onClose,
     compact = false,
     onFocus,
+    isMobileSearchOpen = false,
+    headerHeight = 80,
 }) => {
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [isKeyboardNavigating, setIsKeyboardNavigating] = useState(false);
@@ -173,81 +176,171 @@ const LocationSearchBar = ({
             </div>
 
             {(results.cities.length > 0 || results.locations.length > 0) && (
-                <div 
-                    ref={resultsRef}
-                    className="absolute w-full mt-2 rounded-2xl bg-white shadow-2xl border border-[#E6F2E2] max-h-80 overflow-y-auto" 
-                    style={{ position: 'absolute', zIndex: 9999 }}
-                >
-                    {results.cities.length > 0 && (
-                        <div className="p-3 border-b border-[#F2F7F0]">
-                            <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
-                                Градове {results.cities.length > 0 && `(${results.cities.length})`}
-                            </p>
-                            <ul className="space-y-1">
-                                {results.cities.map((city, cityIndex) => {
-                                    const resultIndex = cityIndex;
-                                    const isSelected = selectedIndex === resultIndex;
-                                    return (
-                                        <li key={city.bulgarianName}>
-                                            <button
-                                                type="button"
-                                                data-result-index={resultIndex}
-                                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
-                                                    isSelected 
-                                                        ? 'bg-[#EAF6E7] border border-[#1B4712]' 
-                                                        : 'hover:bg-[#F5FBF3]'
-                                                }`}
-                                                onClick={() => onCitySelect(city.bulgarianName)}
-                                                onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
-                                            >
-                                                {highlightText(city.bulgarianName, debouncedQuery)}
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-                    )}
+                (isMobileSearchOpen && typeof document !== 'undefined' 
+                    ? createPortal(
+                        <div 
+                            ref={resultsRef}
+                            className="fixed inset-0 max-h-none rounded-none border-0 shadow-none mt-0 w-full bg-white overflow-y-auto"
+                            style={{ 
+                                position: 'fixed',
+                                zIndex: 1000,
+                                top: `${headerHeight}px`,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                            }}
+                        >
+                            {results.cities.length > 0 && (
+                                <div className="p-4 border-b border-[#F2F7F0]">
+                                    <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
+                                        Градове {results.cities.length > 0 && `(${results.cities.length})`}
+                                    </p>
+                                    <ul className="space-y-1">
+                                        {results.cities.map((city, cityIndex) => {
+                                            const resultIndex = cityIndex;
+                                            const isSelected = selectedIndex === resultIndex;
+                                            return (
+                                                <li key={city.bulgarianName}>
+                                                    <button
+                                                        type="button"
+                                                        data-result-index={resultIndex}
+                                                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
+                                                            isSelected 
+                                                                ? 'bg-[#EAF6E7] border border-[#1B4712]' 
+                                                                : 'hover:bg-[#F5FBF3]'
+                                                        }`}
+                                                        onClick={() => onCitySelect(city.bulgarianName)}
+                                                        onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
+                                                    >
+                                                        {highlightText(city.bulgarianName, debouncedQuery)}
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            )}
 
-                    {results.locations.length > 0 && (
-                        <div className="p-3">
-                            <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
-                                Обекти {results.locations.length > 0 && `(${results.locations.length})`}
-                            </p>
-                            <ul className="space-y-1">
-                                {results.locations.map((location, locIndex) => {
-                                    const resultIndex = results.cities.length + locIndex;
-                                    const isSelected = selectedIndex === resultIndex;
-                                    const locationName = location.displayName?.text || location.name;
-                                    return (
-                                        <li key={location.placeId || location.id}>
-                                            <button
-                                                type="button"
-                                                data-result-index={resultIndex}
-                                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
-                                                    isSelected 
-                                                        ? 'bg-[#EAF6E7] border border-[#1B4712]' 
-                                                        : 'hover:bg-[#F5FBF3]'
-                                                }`}
-                                                onClick={() => onLocationSelect(location)}
-                                                onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
-                                            >
-                                                <div className="font-medium">
-                                                    {highlightText(locationName, debouncedQuery)}
-                                                </div>
-                                                {(location.shortFormattedAddress || location.formattedAddress) && (
-                                                    <div className="text-xs text-[#7A8E74] mt-0.5">
-                                                        {location.shortFormattedAddress || location.formattedAddress}
+                            {results.locations.length > 0 && (
+                                <div className="p-4">
+                                    <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
+                                        Обекти {results.locations.length > 0 && `(${results.locations.length})`}
+                                    </p>
+                                    <ul className="space-y-1">
+                                        {results.locations.map((location, locIndex) => {
+                                            const resultIndex = results.cities.length + locIndex;
+                                            const isSelected = selectedIndex === resultIndex;
+                                            const locationName = location.displayName?.text || location.name;
+                                            return (
+                                                <li key={location.placeId || location.id}>
+                                                    <button
+                                                        type="button"
+                                                        data-result-index={resultIndex}
+                                                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
+                                                            isSelected 
+                                                                ? 'bg-[#EAF6E7] border border-[#1B4712]' 
+                                                                : 'hover:bg-[#F5FBF3]'
+                                                        }`}
+                                                        onClick={() => onLocationSelect(location)}
+                                                        onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
+                                                    >
+                                                        <div className="font-medium">
+                                                            {highlightText(locationName, debouncedQuery)}
+                                                        </div>
+                                                        {(location.shortFormattedAddress || location.formattedAddress) && (
+                                                            <div className="text-xs text-[#7A8E74] mt-0.5">
+                                                                {location.shortFormattedAddress || location.formattedAddress}
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>,
+                        document.body
+                    )
+                    : <div 
+                        ref={resultsRef}
+                        className="w-full rounded-2xl bg-white shadow-2xl border border-[#E6F2E2] overflow-y-auto absolute max-h-80 mt-2"
+                        style={{ 
+                            position: 'absolute', 
+                            zIndex: 9999,
+                        }}
+                    >
+                        {results.cities.length > 0 && (
+                            <div className="p-3 border-b border-[#F2F7F0]">
+                                <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
+                                    Градове {results.cities.length > 0 && `(${results.cities.length})`}
+                                </p>
+                                <ul className="space-y-1">
+                                    {results.cities.map((city, cityIndex) => {
+                                        const resultIndex = cityIndex;
+                                        const isSelected = selectedIndex === resultIndex;
+                                        return (
+                                            <li key={city.bulgarianName}>
+                                                <button
+                                                    type="button"
+                                                    data-result-index={resultIndex}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
+                                                        isSelected 
+                                                            ? 'bg-[#EAF6E7] border border-[#1B4712]' 
+                                                            : 'hover:bg-[#F5FBF3]'
+                                                    }`}
+                                                    onClick={() => onCitySelect(city.bulgarianName)}
+                                                    onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
+                                                >
+                                                    {highlightText(city.bulgarianName, debouncedQuery)}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        )}
+
+                        {results.locations.length > 0 && (
+                            <div className="p-3">
+                                <p className="text-xs font-semibold text-[#7A8E74] uppercase tracking-wide mb-2">
+                                    Обекти {results.locations.length > 0 && `(${results.locations.length})`}
+                                </p>
+                                <ul className="space-y-1">
+                                    {results.locations.map((location, locIndex) => {
+                                        const resultIndex = results.cities.length + locIndex;
+                                        const isSelected = selectedIndex === resultIndex;
+                                        const locationName = location.displayName?.text || location.name;
+                                        return (
+                                            <li key={location.placeId || location.id}>
+                                                <button
+                                                    type="button"
+                                                    data-result-index={resultIndex}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-[#0D2F13] ${
+                                                        isSelected 
+                                                            ? 'bg-[#EAF6E7] border border-[#1B4712]' 
+                                                            : 'hover:bg-[#F5FBF3]'
+                                                    }`}
+                                                    onClick={() => onLocationSelect(location)}
+                                                    onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
+                                                >
+                                                    <div className="font-medium">
+                                                        {highlightText(locationName, debouncedQuery)}
                                                     </div>
-                                                )}
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-                    )}
-                </div>
+                                                    {(location.shortFormattedAddress || location.formattedAddress) && (
+                                                        <div className="text-xs text-[#7A8E74] mt-0.5">
+                                                            {location.shortFormattedAddress || location.formattedAddress}
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )
             )}
         </div>
     );
