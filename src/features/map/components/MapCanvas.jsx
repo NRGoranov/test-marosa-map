@@ -1,6 +1,5 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { GoogleMap, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
-import { isMobileDevice } from '../../../utils/mobileUtils';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
 import CustomZoomControl from './controls/CustomZoomControl';
@@ -29,71 +28,11 @@ const MapCanvas = ({
 }) => {
     const userLocationIcon = useMemo(() => createUserLocationMarker(), []);
     const mapOptions = useMapOptions();
-    const mapContainerRef = useRef(null);
-    const touchStartY = useRef(null);
 
     const center = currentUserPosition || DEFAULT_CENTER;
 
-    // Disable zoom and prevent upward dragging on mobile, allow downward for pull-to-refresh
-    useEffect(() => {
-        if (!map || !isMobileDevice() || !mapContainerRef.current) return;
-
-        // Disable map dragging programmatically
-        if (map) {
-            map.setOptions({ draggable: false });
-        }
-
-        const mapDiv = mapContainerRef.current.querySelector('[role="img"]') || mapContainerRef.current;
-        
-        const handleTouchStart = (e) => {
-            // Prevent pinch zoom (multi-touch)
-            if (e.touches.length > 1) {
-                e.preventDefault();
-                e.stopPropagation();
-            } else if (e.touches.length === 1) {
-                touchStartY.current = e.touches[0].clientY;
-            }
-        };
-
-        const handleTouchMove = (e) => {
-            // Always prevent pinch zoom
-            if (e.touches.length > 1) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-
-            // Prevent upward dragging (allow downward for pull-to-refresh)
-            if (touchStartY.current !== null && e.touches.length === 1) {
-                const currentY = e.touches[0].clientY;
-                const deltaY = currentY - touchStartY.current;
-                
-                // If dragging up, prevent it; allow dragging down
-                if (deltaY < 0) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
-        };
-
-        const handleTouchEnd = () => {
-            touchStartY.current = null;
-        };
-
-        // Use capture phase to intercept before Google Maps handles it
-        mapDiv.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
-        mapDiv.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-        mapDiv.addEventListener('touchend', handleTouchEnd, { passive: true, capture: true });
-
-        return () => {
-            mapDiv.removeEventListener('touchstart', handleTouchStart, { capture: true });
-            mapDiv.removeEventListener('touchmove', handleTouchMove, { capture: true });
-            mapDiv.removeEventListener('touchend', handleTouchEnd, { capture: true });
-        };
-    }, [map]);
-
     return (
-        <div ref={mapContainerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={center}

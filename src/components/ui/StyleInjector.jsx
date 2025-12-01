@@ -8,6 +8,23 @@ const StyleInjector = () => (
         body {
             font-family: 'Inter', sans-serif;
         }
+        
+        /* Prevent zoom and upward dragging on mobile (outside map) */
+        @media (max-width: 768px) {
+            html, body {
+                touch-action: pan-y; /* Allow vertical scrolling (pull-to-refresh) but prevent pinch zoom */
+                overscroll-behavior-y: contain; /* Prevent overscroll bounce */
+            }
+            
+            /* Allow full touch interaction on map */
+            .mapSection,
+            .mapSection *,
+            [role="img"],
+            .gm-style,
+            .gm-style * {
+                touch-action: auto !important;
+            }
+        }
         .gm-style-iw {
             background: transparent !important;
             box-shadow: none !important;
