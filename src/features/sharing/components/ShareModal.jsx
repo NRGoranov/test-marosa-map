@@ -134,7 +134,8 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                         type="button"
                         onClick={onClose}
                         aria-label="Затвори"
-                        className="w-8 h-8 flex items-center justify-center rounded-full border border-[#E6F2E2] transition-all duration-200 hover:bg-[#EAF6E7] hover:border-[#1B4712] hover:scale-110 active:scale-95"
+                        className="w-8 h-8 flex items-center justify-center rounded-full border border-[#E6F2E2] transition-all duration-200 hover:bg-[#EAF6E7] hover:border-[#1B4712] hover:scale-110 active:scale-95 flex-shrink-0"
+                        style={{ marginTop: '0.125rem', marginLeft: '0.5rem' }}
                     >
                         <FiX size={20} className="transition-transform duration-200 hover:rotate-90" />
                     </button>
