@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FiCopy, FiMail, FiX } from 'react-icons/fi';
 import { FaViber, FaFacebookMessenger } from 'react-icons/fa';
 
@@ -7,6 +7,17 @@ import { checkIfOpen } from '../../../utils/timeUtils';
 import FacebookIcon from '../../../assets/icons/FacebookIcon';
 import InstagramIcon from '../../../assets/icons/InstagramIcon';
 import TikTokIcon from '../../../assets/icons/TikTokIcon';
+import { isMobileDevice } from '../../../utils/mobileUtils';
+import { 
+    isWebShareAvailable, 
+    tryWebShare,
+    shareToFacebook, 
+    shareToMessenger, 
+    shareToViber, 
+    shareToInstagram, 
+    shareToEmail, 
+    shareToTikTok 
+} from '../../../utils/nativeShare';
 
 const ShareModal = ({ isOpen, onClose, place }) => {
     const [isCopied, setIsCopied] = useState(false);
@@ -41,6 +52,69 @@ const ShareModal = ({ isOpen, onClose, place }) => {
         }
     }, [googleMapsUrl]);
 
+    // Handle native sharing for mobile devices
+    const handleNativeShare = useCallback(async (platform) => {
+        if (!googleMapsUrl) return;
+        
+        const locationName = place?.name || place?.displayName?.text || 'Мароса Градина';
+        const shareText = `Разгледайте: ${locationName}`;
+        const shareData = {
+            title: locationName,
+            text: shareText,
+            url: googleMapsUrl,
+        };
+
+        // Try Web Share API first if available (universal fallback)
+        if (isWebShareAvailable() && isMobileDevice()) {
+            const shared = await tryWebShare(shareData, () => {
+                // Fallback to platform-specific deep links
+                switch (platform) {
+                    case 'facebook':
+                        shareToFacebook(googleMapsUrl, shareText);
+                        break;
+                    case 'messenger':
+                        shareToMessenger(googleMapsUrl);
+                        break;
+                    case 'viber':
+                        shareToViber(googleMapsUrl, shareText);
+                        break;
+                    case 'instagram':
+                        shareToInstagram(googleMapsUrl, shareText);
+                        break;
+                    case 'email':
+                        shareToEmail(googleMapsUrl, `Упътване до ${locationName}`, shareText);
+                        break;
+                    case 'tiktok':
+                        shareToTikTok(googleMapsUrl);
+                        break;
+                }
+            });
+            if (shared) return;
+        }
+
+        // Platform-specific native sharing
+        switch (platform) {
+            case 'facebook':
+                shareToFacebook(googleMapsUrl, shareText);
+                break;
+            case 'messenger':
+                shareToMessenger(googleMapsUrl);
+                break;
+            case 'viber':
+                shareToViber(googleMapsUrl, shareText);
+                break;
+            case 'instagram':
+                shareToInstagram(googleMapsUrl, shareText);
+                break;
+            case 'email':
+                shareToEmail(googleMapsUrl, `Упътване до ${locationName}`, shareText);
+                break;
+            case 'tiktok':
+                shareToTikTok(googleMapsUrl);
+                break;
+        }
+    }, [googleMapsUrl, place]);
+
     if (!isOpen || !place) {
         return null;
     }
@@ -73,52 +147,50 @@ const ShareModal = ({ isOpen, onClose, place }) => {
         {
             name: isCopied ? 'Копирано!' : 'Копирай линка',
             action: handleCopy,
-            icon: <FiCopy size={24} />,
+            icon: <FiCopy size={18} />,
             highlight: isCopied,
         },
         {
             name: 'Facebook',
-            href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareText)}`,
-            icon: <FacebookIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
+            action: () => handleNativeShare('facebook'),
+            icon: <FacebookIcon className="w-5 h-5 text-[#1B4712]" />,
+            // Fallback href for desktop
+            href: isMobileDevice() ? undefined : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareText)}`,
         },
         {
             name: 'Messenger',
-            href: `https://www.facebook.com/dialog/send?link=${encodedUrl}`,
-            icon: <FaFacebookMessenger size={24} className="text-[#1B4712]" />,
+            action: () => handleNativeShare('messenger'),
+            icon: <FaFacebookMessenger size={18} className="text-[#1B4712]" />,
+            // Fallback href for desktop
+            href: isMobileDevice() ? undefined : `https://www.facebook.com/dialog/send?link=${encodedUrl}`,
         },
         {
             name: 'Instagram',
-            href: `https://www.instagram.com/direct/inbox/`,
-            icon: <InstagramIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
-            onClick: (e) => {
-                // Try Instagram app deep link first (mobile)
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile) {
-                    const appLink = `instagram://direct?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`;
-                    window.location.href = appLink;
-                    // Fallback to web after a short delay if app doesn't open
-                    setTimeout(() => {
-                        window.open(`https://www.instagram.com/direct/inbox/`, '_blank');
-                    }, 500);
-                    e.preventDefault();
-                }
-            },
+            action: () => handleNativeShare('instagram'),
+            icon: <InstagramIcon className="w-5 h-5 text-[#1B4712]" />,
+            // Fallback href for desktop
+            href: isMobileDevice() ? undefined : 'https://www.instagram.com/',
         },
-       
         {
             name: 'Viber',
-            href: `https://invite.viber.com/?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`,
-            icon: <FaViber size={24} className="text-[#1B4712]" />,
+            action: () => handleNativeShare('viber'),
+            icon: <FaViber size={18} className="text-[#1B4712]" />,
+            // Fallback href for desktop
+            href: isMobileDevice() ? undefined : `https://invite.viber.com/?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`,
         },
         {
             name: 'TikTok',
-            href: 'https://www.tiktok.com/@nedev.bg',
-            icon: <TikTokIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
+            action: () => handleNativeShare('tiktok'),
+            icon: <TikTokIcon className="w-5 h-5 text-[#1B4712]" />,
+            // Fallback href for desktop
+            href: isMobileDevice() ? undefined : 'https://www.tiktok.com/@nedev.bg',
         },
         {
             name: 'Email',
+            action: () => handleNativeShare('email'),
+            icon: <FiMail size={18} />,
+            // mailto works on both mobile and desktop
             href: `mailto:?subject=${encodeURIComponent('Упътване до ' + locationName)}&body=${encodeURIComponent(shareText + '\n\n' + googleMapsUrl)}`,
-            icon: <FiMail size={24} />,
         },
     ];
 
@@ -177,9 +249,18 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                                 : 'border-[#E6F2E2] bg-white hover:border-[#C9F0C2] hover:bg-[#F5FBF3] hover:shadow-md hover:scale-105 active:scale-95'
                         }`;
 
+                        // If action is provided, use button; otherwise use anchor with href
                         if (option.action) {
                             return (
-                                <button key={option.name} type="button" onClick={option.action} className={baseClasses}>
+                                <button 
+                                    key={option.name} 
+                                    type="button" 
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        option.action();
+                                    }}
+                                    className={baseClasses}
+                                >
                                     <span className="w-10 h-10 aspect-square rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm flex-shrink-0">
                                         <span className="transition-transform duration-300 group-hover:scale-110">
                                             {option.icon}
@@ -190,11 +271,16 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                             );
                         }
 
+                        // Fallback to anchor tag for desktop or when no action
                         return (
                             <a
                                 key={option.name}
                                 href={option.href}
-                                onClick={option.onClick}
+                                onClick={(e) => {
+                                    if (option.onClick) {
+                                        option.onClick(e);
+                                    }
+                                }}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={baseClasses}
