@@ -1,29 +1,39 @@
 import { isMobileDevice } from './mobileUtils';
 
 /**
- * Attempts to open a deep link and falls back to web URL if app is not installed
- * @param {string} deepLink - The deep link URL scheme
- * @param {string} fallbackUrl - The web URL to open if deep link fails
- * @param {number} timeout - Timeout in ms before falling back (default: 500)
+ * Shows a confirmation dialog asking user if they want to open the app
+ * @param {string} appName - Name of the app
+ * @returns {Promise<boolean>} True if user wants to open app, false otherwise
  */
-const tryDeepLink = (deepLink, fallbackUrl, timeout = 500) => {
+const confirmOpenApp = (appName) => {
+    return new Promise((resolve) => {
+        const userConfirmed = window.confirm(`Отвори ли приложението ${appName}?`);
+        resolve(userConfirmed);
+    });
+};
+
+/**
+ * Attempts to open a deep link after user confirmation
+ * @param {string} deepLink - The deep link URL scheme
+ * @param {string} fallbackUrl - The web URL to open if user declines or app not installed
+ * @param {string} appName - Name of the app for confirmation dialog
+ */
+const tryDeepLink = async (deepLink, fallbackUrl, appName) => {
     if (!isMobileDevice()) {
         window.open(fallbackUrl, '_blank');
         return;
     }
 
-    // Try to open the deep link
-    const startTime = Date.now();
-    window.location.href = deepLink;
-
-    // Fallback after timeout if app didn't open
-    setTimeout(() => {
-        const elapsed = Date.now() - startTime;
-        // If page is still visible after timeout, app likely didn't open
-        if (elapsed >= timeout - 100) {
-            window.open(fallbackUrl, '_blank');
-        }
-    }, timeout);
+    // Ask user if they want to open the app
+    const userWantsApp = await confirmOpenApp(appName);
+    
+    if (userWantsApp) {
+        // User confirmed - try to open the app
+        window.location.href = deepLink;
+    } else {
+        // User declined - open browser
+        window.open(fallbackUrl, '_blank');
+    }
 };
 
 /**
@@ -62,7 +72,7 @@ export const tryWebShare = async (shareData, fallbackFn) => {
  * @param {string} url - URL to share
  * @param {string} text - Text to share
  */
-export const shareToFacebook = (url, text = '') => {
+export const shareToFacebook = async (url, text = '') => {
     const encodedUrl = encodeURIComponent(url);
     const encodedText = encodeURIComponent(text);
     
@@ -71,25 +81,17 @@ export const shareToFacebook = (url, text = '') => {
         return;
     }
 
-    // Try Messenger share first (better for direct sharing)
-    const messengerLink = `fb-messenger://share?link=${encodedUrl}`;
-    const messengerFallback = `https://www.facebook.com/dialog/send?link=${encodedUrl}`;
-    
-    tryDeepLink(messengerLink, messengerFallback);
-    
-    // Also try Facebook app share dialog
-    setTimeout(() => {
-        const fbLink = `fb://facewebmodal/f?href=${encodedUrl}`;
-        const fbFallback = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
-        tryDeepLink(fbLink, fbFallback, 300);
-    }, 100);
+    // Try Facebook app share dialog
+    const fbLink = `fb://facewebmodal/f?href=${encodedUrl}`;
+    const fbFallback = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+    await tryDeepLink(fbLink, fbFallback, 'Facebook');
 };
 
 /**
  * Messenger native share
  * @param {string} url - URL to share
  */
-export const shareToMessenger = (url) => {
+export const shareToMessenger = async (url) => {
     const encodedUrl = encodeURIComponent(url);
     
     if (!isMobileDevice()) {
@@ -100,7 +102,7 @@ export const shareToMessenger = (url) => {
     const deepLink = `fb-messenger://share/?link=${encodedUrl}`;
     const fallback = `https://www.messenger.com/t/?link=${encodedUrl}`;
     
-    tryDeepLink(deepLink, fallback);
+    await tryDeepLink(deepLink, fallback, 'Messenger');
 };
 
 /**
@@ -108,7 +110,7 @@ export const shareToMessenger = (url) => {
  * @param {string} url - URL to share
  * @param {string} text - Text to share
  */
-export const shareToViber = (url, text = '') => {
+export const shareToViber = async (url, text = '') => {
     const encodedText = encodeURIComponent(text ? `${text} ${url}` : url);
     
     if (!isMobileDevice()) {
@@ -120,13 +122,12 @@ export const shareToViber = (url, text = '') => {
     const forwardLink = `viber://forward?text=${encodedText}`;
     const fallback = `https://invite.viber.com/?text=${encodedText}`;
     
-    tryDeepLink(forwardLink, fallback);
+    await tryDeepLink(forwardLink, fallback, 'Viber');
 };
 
 /**
  * Instagram native share
- * Note: Instagram doesn't support link-only sharing via deep link
- * Best approach: Copy link and open Instagram
+ * Opens Instagram direct messages where user can paste and send the link
  * @param {string} url - URL to share
  * @param {string} text - Text to share
  */
@@ -134,7 +135,7 @@ export const shareToInstagram = async (url, text = '') => {
     const shareText = text ? `${text} ${url}` : url;
     
     if (!isMobileDevice()) {
-        window.open('https://www.instagram.com/', '_blank');
+        window.open('https://www.instagram.com/direct/inbox/', '_blank');
         return;
     }
 
@@ -145,16 +146,11 @@ export const shareToInstagram = async (url, text = '') => {
         console.warn('Failed to copy to clipboard:', error);
     }
 
-    // Try Instagram share scheme (limited support)
-    const shareLink = `instagram://share?text=${encodeURIComponent(shareText)}`;
-    const cameraLink = `instagram://camera`;
-    const fallback = 'https://www.instagram.com/';
+    // Open Instagram direct messages
+    const directLink = `instagram://direct-inbox`;
+    const fallback = 'https://www.instagram.com/direct/inbox/';
     
-    // Try share first, then camera, then fallback
-    tryDeepLink(shareLink, cameraLink, 300);
-    setTimeout(() => {
-        tryDeepLink(cameraLink, fallback, 300);
-    }, 400);
+    await tryDeepLink(directLink, fallback, 'Instagram');
 };
 
 /**
@@ -174,7 +170,7 @@ export const shareToEmail = (url, subject = '', body = '') => {
 /**
  * TikTok native share
  * Note: TikTok has no public deep-link API for sharing
- * Workaround: Copy link and open TikTok
+ * Workaround: Copy link and open TikTok (user can paste in messages)
  * @param {string} url - URL to share
  */
 export const shareToTikTok = async (url) => {
@@ -190,10 +186,10 @@ export const shareToTikTok = async (url) => {
         console.warn('Failed to copy to clipboard:', error);
     }
 
-    // Try to open TikTok app
+    // Try to open TikTok app (user can paste link in messages)
     const deepLink = 'tiktok://';
     const fallback = 'https://www.tiktok.com/';
     
-    tryDeepLink(deepLink, fallback);
+    await tryDeepLink(deepLink, fallback, 'TikTok');
 };
 
