@@ -73,18 +73,23 @@ const ShareModal = ({ isOpen, onClose, place }) => {
         {
             name: isCopied ? 'Копирано!' : 'Копирай линка',
             action: handleCopy,
-            icon: <FiCopy size={14} />,
+            icon: <FiCopy size={24} />,
             highlight: isCopied,
         },
         {
             name: 'Facebook',
             href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareText)}`,
-            icon: <FacebookIcon className="w-5 h-5 text-[#1B4712]" />,
+            icon: <FacebookIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
+        },
+        {
+            name: 'Messenger',
+            href: `https://www.facebook.com/dialog/send?link=${encodedUrl}`,
+            icon: <FaFacebookMessenger size={24} className="text-[#1B4712]" />,
         },
         {
             name: 'Instagram',
             href: `https://www.instagram.com/direct/inbox/`,
-            icon: <InstagramIcon className="w-5 h-5 text-[#1B4712]" />,
+            icon: <InstagramIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
             onClick: (e) => {
                 // Try Instagram app deep link first (mobile)
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -99,32 +104,28 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                 }
             },
         },
-        {
-            name: 'Messenger',
-            href: `https://www.facebook.com/dialog/send?link=${encodedUrl}`,
-            icon: <FaFacebookMessenger size={18} className="text-[#1B4712]" />,
-        },
+       
         {
             name: 'Viber',
             href: `https://invite.viber.com/?text=${encodeURIComponent(shareText + ' ' + googleMapsUrl)}`,
-            icon: <FaViber size={18} className="text-[#1B4712]" />,
+            icon: <FaViber size={24} className="text-[#1B4712]" />,
         },
         {
             name: 'TikTok',
             href: 'https://www.tiktok.com/@nedev.bg',
-            icon: <TikTokIcon className="w-5 h-5 text-[#1B4712]" />,
+            icon: <TikTokIcon size={24} className="w-5 h-5 text-[#1B4712]" />,
         },
         {
             name: 'Email',
             href: `mailto:?subject=${encodeURIComponent('Упътване до ' + locationName)}&body=${encodeURIComponent(shareText + '\n\n' + googleMapsUrl)}`,
-            icon: <FiMail size={14} />,
+            icon: <FiMail size={24} />,
         },
     ];
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4 py-4 animate-fadeIn overflow-y-auto" onClick={onClose}>
             <div
-                className="bg-white rounded-[64px] rounded-tr-[152px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-8 space-y-6 animate-scaleIn my-auto"
+                className="bg-white rounded-tl-[48px] rounded-tr-[80px] rounded-br-[48px] rounded-bl-[48px] sm:rounded-[32px] sm:rounded-tr-[100px] shadow-[0_30px_90px_rgba(0,0,0,0.25)] w-full max-w-2xl p-8 space-y-6 animate-scaleIn my-auto"
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between">
@@ -178,7 +179,7 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                         if (option.action) {
                             return (
                                 <button key={option.name} type="button" onClick={option.action} className={baseClasses}>
-                                    <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm">
+                                    <span className="w-10 h-10 aspect-square rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm flex-shrink-0">
                                         <span className="transition-transform duration-300 group-hover:scale-110">
                                             {option.icon}
                                         </span>
@@ -197,7 +198,7 @@ const ShareModal = ({ isOpen, onClose, place }) => {
                                 rel="noopener noreferrer"
                                 className={baseClasses}
                             >
-                                <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm">
+                                <span className="w-10 h-10 aspect-square rounded-full flex items-center justify-center bg-[#C9F0C2] text-[#1B4712] transition-all duration-300 group-hover:bg-[#B8E8B0] group-hover:scale-110 group-hover:shadow-sm flex-shrink-0">
                                     <span className="transition-transform duration-300 group-hover:scale-110">
                                         {option.icon}
                                     </span>
