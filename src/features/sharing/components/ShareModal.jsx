@@ -122,21 +122,52 @@ const ShareModal = ({ isOpen, onClose, place }) => {
 
     const encodedUrl = encodeURIComponent(googleMapsUrl);
     
-    // Get image URL with multiple fallbacks
-    let imageUrl = place.imageUrl;
-    if (!imageUrl && place.photos?.[0]?.getUrl) {
-        try {
-            imageUrl = place.photos[0].getUrl({ maxWidth: 600, maxHeight: 600 });
-        } catch (e) {
-            console.warn('Failed to get photo URL:', e);
+    // Get image URL with multiple fallbacks - prioritize shop images over map icon
+    let imageUrl = null;
+    
+    // Try all possible shop image sources in priority order
+    if (place.image && typeof place.image === 'string' && place.image.trim() !== '') {
+        imageUrl = place.image;
+    } else if (place.imageUrl && typeof place.imageUrl === 'string' && place.imageUrl.trim() !== '') {
+        imageUrl = place.imageUrl;
+    } else if (place.coverPhoto && typeof place.coverPhoto === 'string' && place.coverPhoto.trim() !== '') {
+        imageUrl = place.coverPhoto;
+    } else if (place.gallery && Array.isArray(place.gallery) && place.gallery.length > 0 && place.gallery[0]) {
+        const galleryImg = place.gallery[0];
+        if (typeof galleryImg === 'string' && galleryImg.trim() !== '') {
+            imageUrl = galleryImg;
+        }
+    } else if (place.photos && Array.isArray(place.photos) && place.photos.length > 0) {
+        if (place.photos[0]?.getUrl) {
+            try {
+                imageUrl = place.photos[0].getUrl({ maxWidth: 600, maxHeight: 600 });
+            } catch (e) {
+                console.warn('Failed to get photo URL:', e);
+            }
+        } else if (typeof place.photos[0] === 'string' && place.photos[0].trim() !== '') {
+            imageUrl = place.photos[0];
         }
     }
-    if (!imageUrl && place.icon) {
-        imageUrl = place.icon;
-    }
-    // Final fallback to default image
-    if (!imageUrl) {
-        imageUrl = 'https://i.imgur.com/g2a4JAh.png';
+    
+    // Use map icon ONLY if no shop images exist
+    // Check if we have a valid image URL that's not the default fallback
+    const hasShopImage = !!imageUrl && 
+                        typeof imageUrl === 'string' &&
+                        imageUrl.trim() !== '' &&
+                        imageUrl !== 'https://i.imgur.com/g2a4JAh.png' &&
+                        !imageUrl.startsWith('data:image/svg');
+    
+    // Debug logging
+    if (import.meta.env.DEV) {
+        console.log('ShareModal image detection:', {
+            hasShopImage,
+            imageUrl,
+            placeImage: place.image,
+            placeImageUrl: place.imageUrl,
+            placeCoverPhoto: place.coverPhoto,
+            placeGallery: place.gallery,
+            placePhotos: place.photos
+        });
     }
     
     const openingHoursInfo = checkIfOpen(place);
@@ -216,22 +247,36 @@ const ShareModal = ({ isOpen, onClose, place }) => {
 
                 <div className="flex gap-4 border-b border-[#E6F2E2] pb-5">
                     <div className="relative group">
-                        {imageUrl && imageUrl !== 'https://i.imgur.com/g2a4JAh.png' ? (
+                        {hasShopImage && imageUrl ? (
                             <img
                                 src={imageUrl}
                                 alt={locationName}
                                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover flex-shrink-0 border border-[#E6F2E2] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer"
                                 loading="lazy"
                                 onError={(e) => {
-                                    // Fallback if image fails to load
-                                    e.target.src = 'https://i.imgur.com/g2a4JAh.png';
+                                    // Fallback to map icon if image fails to load
+                                    console.warn('Image failed to load:', imageUrl);
+                                    e.target.style.display = 'none';
+                                    const fallback = e.target.nextElementSibling;
+                                    if (fallback) {
+                                        fallback.style.display = 'flex';
+                                    }
+                                }}
+                                onLoad={() => {
+                                    // Hide map icon when image loads successfully
+                                    const mapIconDiv = document.querySelector('.share-modal-map-icon-fallback');
+                                    if (mapIconDiv) {
+                                        mapIconDiv.style.display = 'none';
+                                    }
                                 }}
                             />
-                        ) : (
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#E6F2E2] bg-[#F5FBF3] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer">
-                                <MapIcon className="w-12 h-12 sm:w-14 sm:h-14 text-[#1B4712]" />
-                            </div>
-                        )}
+                        ) : null}
+                        <div 
+                            className="share-modal-map-icon-fallback w-24 h-24 sm:w-28 sm:h-28 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#E6F2E2] bg-[#F5FBF3] transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:border-[#C9F0C2] cursor-pointer" 
+                            style={{ display: (hasShopImage && imageUrl) ? 'none' : 'flex' }}
+                        >
+                            <MapIcon className="w-12 h-12 sm:w-14 sm:h-14 text-[#1B4712]" />
+                        </div>
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2">

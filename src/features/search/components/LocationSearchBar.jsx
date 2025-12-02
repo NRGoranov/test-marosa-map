@@ -108,6 +108,12 @@ function LocationSearchBarComponent({
             } else {
                 onLocationSelect(selected.data);
             }
+            // Close search instantly, clear results, blur input
+            onQueryChange('');
+            if (onClose) onClose();
+            if (ref && ref.current) {
+                ref.current.blur();
+            }
             setSelectedIndex(-1);
         } else if (e.key === 'Escape') {
             if (onClose) {
@@ -210,8 +216,16 @@ function LocationSearchBarComponent({
                                                                 ? 'bg-[#EAF6E7] border border-[#1B4712]' 
                                                                 : 'hover:bg-[#F5FBF3]'
                                                         }`}
-                                                        onClick={() => onCitySelect(city.bulgarianName)}
-                                                        onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
+                                                    onClick={() => {
+                                                        onCitySelect(city.bulgarianName);
+                                                        // Close search instantly, clear results, blur input
+                                                        onQueryChange('');
+                                                        if (onClose) onClose();
+                                                        if (ref && ref.current) {
+                                                            ref.current.blur();
+                                                        }
+                                                    }}
+                                                    onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
                                                     >
                                                         {highlightText(city.bulgarianName, debouncedQuery)}
                                                     </button>
@@ -242,7 +256,15 @@ function LocationSearchBarComponent({
                                                                 ? 'bg-[#EAF6E7] border border-[#1B4712]' 
                                                                 : 'hover:bg-[#F5FBF3]'
                                                         }`}
-                                                        onClick={() => onLocationSelect(location)}
+                                                        onClick={() => {
+                                                            onLocationSelect(location);
+                                                            // Close search instantly, clear results, blur input
+                                                            onQueryChange('');
+                                                            if (onClose) onClose();
+                                                            if (ref && ref.current) {
+                                                                ref.current.blur();
+                                                            }
+                                                        }}
                                                         onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
                                                     >
                                                         <div className="font-medium">
@@ -290,7 +312,15 @@ function LocationSearchBarComponent({
                                                             ? 'bg-[#EAF6E7] border border-[#1B4712]' 
                                                             : 'hover:bg-[#F5FBF3]'
                                                     }`}
-                                                    onClick={() => onCitySelect(city.bulgarianName)}
+                                                    onClick={() => {
+                                                        onCitySelect(city.bulgarianName);
+                                                        // Close search instantly, clear results, blur input
+                                                        onQueryChange('');
+                                                        if (onClose) onClose();
+                                                        if (ref && ref.current) {
+                                                            ref.current.blur();
+                                                        }
+                                                    }}
                                                     onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
                                                 >
                                                     {highlightText(city.bulgarianName, debouncedQuery)}
@@ -322,7 +352,15 @@ function LocationSearchBarComponent({
                                                             ? 'bg-[#EAF6E7] border border-[#1B4712]' 
                                                             : 'hover:bg-[#F5FBF3]'
                                                     }`}
-                                                    onClick={() => onLocationSelect(location)}
+                                                    onClick={() => {
+                                                        onLocationSelect(location);
+                                                        // Close search instantly, clear results, blur input
+                                                        onQueryChange('');
+                                                        if (onClose) onClose();
+                                                        if (ref && ref.current) {
+                                                            ref.current.blur();
+                                                        }
+                                                    }}
                                                     onMouseEnter={() => !isKeyboardNavigating && setSelectedIndex(resultIndex)}
                                                 >
                                                     <div className="font-medium">

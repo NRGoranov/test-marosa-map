@@ -61,6 +61,19 @@ const StyleInjector = () => (
         .gm-style-iw-t::after {
             display: none !important;
         }
+        /* Remove the bottom triangle/arrow from InfoWindow */
+        .gm-style-iw-t::before {
+            display: none !important;
+        }
+        .gm-style-iw-tc {
+            display: none !important;
+        }
+        .gm-style-iw-tc::after {
+            display: none !important;
+        }
+        .gm-style-iw-tc::before {
+            display: none !important;
+        }
         .gm-ui-hover-effect {
             display: none !important;
         }

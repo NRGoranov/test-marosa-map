@@ -527,6 +527,17 @@
   top: clamp(1.5rem, 4vw, 3rem);
   left: clamp(1.5rem, 4vw, 3rem);
   z-index: 3;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.heroLogo:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
+}
+
+.heroLogo:active {
+  transform: scale(0.98);
 }
 
 .heroLogo svg {
