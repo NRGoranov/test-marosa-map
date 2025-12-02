@@ -14,6 +14,15 @@ const StyleInjector = () => (
             html, body {
                 touch-action: pan-y; /* Allow vertical scrolling (pull-to-refresh) but prevent pinch zoom */
                 overscroll-behavior-y: contain; /* Prevent overscroll bounce */
+                overscroll-behavior-x: none; /* Prevent horizontal overscroll */
+            }
+            
+            /* Prevent body scroll when map is active */
+            body.hasMapInteracted {
+                overflow: hidden !important;
+                position: fixed !important;
+                width: 100% !important;
+                height: 100% !important;
             }
             
             /* Allow full touch interaction on map */
@@ -22,6 +31,16 @@ const StyleInjector = () => (
             [role="img"],
             .gm-style,
             .gm-style * {
+                touch-action: auto !important;
+            }
+            
+            /* Prevent scrolling on map container when map is active */
+            .mapSection.hasMapInteracted {
+                touch-action: none;
+                overscroll-behavior: none;
+            }
+            
+            .mapSection.hasMapInteracted .mapSurface {
                 touch-action: auto !important;
             }
         }
@@ -77,6 +96,22 @@ const StyleInjector = () => (
         .mapSection:not(.hasMapInteracted) canvas {
             border-top-left-radius: 24px !important;
             border-top-right-radius: 24px !important;
+        }
+        
+        /* Ensure map container is properly sized when map is active */
+        .mapSection.hasMapInteracted .mapSurface > div,
+        .mapSection.hasMapInteracted .mapSurface > div > div {
+            width: 100% !important;
+            height: 100% !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
+        }
+        
+        /* Force Google Maps to resize properly */
+        .mapSection.hasMapInteracted .gm-style,
+        .mapSection.hasMapInteracted .gm-style > div:first-child {
+            width: 100% !important;
+            height: 100% !important;
         }
         
         /* --- Styles for Resizable Splitter --- */

@@ -67,14 +67,33 @@ function MarosaLocator() {
             if (headerRef.current) {
                 setHeaderHeight(headerRef.current.offsetHeight);
             }
+            // Trigger map resize if map is loaded
+            if (map && window.google && window.google.maps) {
+                setTimeout(() => {
+                    try {
+                        window.google.maps.event.trigger(map, 'resize');
+                    } catch (e) {
+                        console.warn('Failed to trigger map resize on window resize:', e);
+                    }
+                }, 100);
+            }
         };
         
         // Initial measurement
         handleResize();
         
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleResize);
+        }
+        
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', handleResize);
+            }
+        };
+    }, [map]);
 
     const mobileMapHeight = viewportHeight - headerHeight;
 
@@ -92,19 +111,23 @@ function MarosaLocator() {
     } = useGeolocationGate({ map, isMapReady: isLoaded });
 
     const handleCitySelect = useCallback((cityName) => {
-        if (!map) return;
+        if (!map || !allCities || allCities.length === 0) return;
 
         console.log(`Searching for city: ${cityName}`);
 
-        const cityData = allCities.find(city => city.bulgarianName === cityName);
+        const cityData = allCities.find(city => city && city.bulgarianName === cityName);
 
-        if (cityData) {
+        if (cityData && cityData.lat !== undefined && cityData.lng !== undefined) {
             const position = { lat: cityData.lat, lng: cityData.lng };
-            map.panTo(position);
-            map.setZoom(11);
-            setHasMapInteracted(true);
-            // Location list will show automatically via handleMapIdle when zoom > 11
-            console.log(`Panned to ${cityName} at`, position);
+            try {
+                map.panTo(position);
+                map.setZoom(11);
+                setHasMapInteracted(true);
+                // Location list will show automatically via handleMapIdle when zoom > 11
+                console.log(`Panned to ${cityName} at`, position);
+            } catch (e) {
+                console.error(`Error panning to city ${cityName}:`, e);
+            }
         } else {
             console.error(`City not found in local data: ${cityName}`);
         }
@@ -162,11 +185,17 @@ function MarosaLocator() {
                 
                 // Update visible locations based on current bounds after map moves
                 setTimeout(() => {
+                    if (!map) return;
                     const bounds = map.getBounds();
-                    if (bounds && locations) {
+                    if (bounds && locations && locations.length > 0) {
                         const visible = locations.filter(location => {
-                            if (!location.position) return false;
-                            return bounds.contains(location.position);
+                            if (!location || !location.position) return false;
+                            try {
+                                return bounds.contains(location.position);
+                            } catch (e) {
+                                console.warn('Error checking bounds:', e);
+                                return false;
+                            }
                         });
                         if (visible.length > 0) {
                             setVisibleLocations(visible);
@@ -242,18 +271,30 @@ function MarosaLocator() {
     }, []);
 
     const onMapLoad = useCallback((map) => {
+        if (!map) return;
+        
         setMap(map);
+        
         // Store initial map state
-        if (map) {
-            const center = map.getCenter();
-            if (center) {
-                initialMapCenter.current = { lat: center.lat(), lng: center.lng() };
-            }
-            const zoom = map.getZoom();
-            if (zoom) {
-                initialZoom.current = zoom;
-            }
+        const center = map.getCenter();
+        if (center) {
+            initialMapCenter.current = { lat: center.lat(), lng: center.lng() };
         }
+        const zoom = map.getZoom();
+        if (zoom !== undefined && zoom !== null) {
+            initialZoom.current = zoom;
+        }
+        
+        // Force map resize to ensure proper rendering
+        setTimeout(() => {
+            if (map && window.google && window.google.maps) {
+                try {
+                    window.google.maps.event.trigger(map, 'resize');
+                } catch (e) {
+                    console.warn('Failed to trigger map resize:', e);
+                }
+            }
+        }, 100);
     }, []);
 
     const handleMenuToggle = () => setIsMenuOpen((prev) => !prev);
@@ -307,19 +348,20 @@ function MarosaLocator() {
         const bounds = map.getBounds();
         if (!bounds) return;
 
-        const zoom = map.getZoom() || 7;
+        const zoom = map.getZoom();
+        if (zoom === undefined || zoom === null) return;
+        
         const center = map.getCenter();
+        if (!center) return;
 
         // Check if map has been interacted with (zoom changed from initial OR center changed)
-        if (center) {
-            const currentCenter = { lat: center.lat(), lng: center.lng() };
-            const centerChanged = 
-                Math.abs(currentCenter.lat - initialMapCenter.current.lat) > 0.01 ||
-                Math.abs(currentCenter.lng - initialMapCenter.current.lng) > 0.01;
-            
-            if (zoom !== initialZoom.current || centerChanged) {
-                setHasMapInteracted(true);
-            }
+        const currentCenter = { lat: center.lat(), lng: center.lng() };
+        const centerChanged = 
+            Math.abs(currentCenter.lat - initialMapCenter.current.lat) > 0.01 ||
+            Math.abs(currentCenter.lng - initialMapCenter.current.lng) > 0.01;
+        
+        if (zoom !== initialZoom.current || centerChanged) {
+            setHasMapInteracted(true);
         }
 
         // Close info window if zoomed out or moved away from selected place
@@ -331,19 +373,22 @@ function MarosaLocator() {
                 }
 
                 // Check if selected place is no longer in viewport bounds
-                if (!bounds.contains(selectedPlacePositionRef.current)) {
-                    return true;
+                try {
+                    if (!bounds.contains(selectedPlacePositionRef.current)) {
+                        return true;
+                    }
+                } catch (e) {
+                    // If bounds check fails, check distance instead
+                    console.warn('Bounds check failed:', e);
                 }
 
                 // Check if map center has moved far away from selected place
                 // Using approximate distance: ~0.45 degrees ≈ 50km
-                if (center && selectedPlacePositionRef.current) {
-                    const latDiff = Math.abs(center.lat() - selectedPlacePositionRef.current.lat);
-                    const lngDiff = Math.abs(center.lng() - selectedPlacePositionRef.current.lng);
-                    // If center moved more than ~50km away, close the info window
-                    if (latDiff > 0.45 || lngDiff > 0.45) {
-                        return true;
-                    }
+                const latDiff = Math.abs(center.lat() - selectedPlacePositionRef.current.lat);
+                const lngDiff = Math.abs(center.lng() - selectedPlacePositionRef.current.lng);
+                // If center moved more than ~50km away, close the info window
+                if (latDiff > 0.45 || lngDiff > 0.45) {
+                    return true;
                 }
 
                 return false;
@@ -356,8 +401,13 @@ function MarosaLocator() {
 
         // Filter locations within viewport bounds
         const visible = locations.filter(location => {
-            if (!location.position) return false;
-            return bounds.contains(location.position);
+            if (!location || !location.position) return false;
+            try {
+                return bounds.contains(location.position);
+            } catch (e) {
+                console.warn('Error checking bounds for location:', e);
+                return false;
+            }
         });
 
         setVisibleLocations(visible);
@@ -376,7 +426,7 @@ function MarosaLocator() {
             // Only hide list if no shop is selected
             setShowLocationList(false);
         }
-    }, [map, locations, hasMapInteracted, selectedPlace, closeInfoWindow, visibleLocations]);
+    }, [map, locations, hasMapInteracted, selectedPlace, closeInfoWindow]);
 
     // Scroll mobile list to top when a shop is clicked
     useEffect(() => {
@@ -403,6 +453,33 @@ function MarosaLocator() {
             return () => clearTimeout(timer);
         }
     }, [isDesktop, hasMapInteracted, isSearchOpen]);
+
+    // Prevent body scroll when map is active on mobile
+    useEffect(() => {
+        if (!isDesktop && hasMapInteracted) {
+            // Prevent body scroll
+            const originalOverflow = document.body.style.overflow;
+            const originalPosition = document.body.style.position;
+            const originalTop = document.body.style.top;
+            const originalWidth = document.body.style.width;
+            
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            const scrollY = window.scrollY;
+            document.body.style.top = `-${scrollY}px`;
+            
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                document.body.style.position = originalPosition;
+                document.body.style.top = originalTop;
+                document.body.style.width = originalWidth;
+                if (scrollY) {
+                    window.scrollTo(0, scrollY);
+                }
+            };
+        }
+    }, [isDesktop, hasMapInteracted]);
 
     // Handle smooth centralization for desktop location list after 3 seconds of inactivity
     useEffect(() => {
@@ -819,6 +896,8 @@ function MarosaLocator() {
                 
                 const handleTouchStart = (e) => {
                     e.stopPropagation();
+                    if (!e.touches || e.touches.length === 0) return;
+                    
                     const touch = e.touches[0];
                     dragStartY.current = touch.clientY;
                     listStartY.current = getPositionY();
@@ -829,6 +908,9 @@ function MarosaLocator() {
                     if (!isDragging) return;
                     e.stopPropagation();
                     e.preventDefault();
+                    
+                    if (!e.touches || e.touches.length === 0) return;
+                    
                     const touch = e.touches[0];
                     const currentY = touch.clientY;
                     const deltaY = currentY - dragStartY.current;
@@ -844,6 +926,7 @@ function MarosaLocator() {
                 const handleTouchEnd = (e) => {
                     if (!isDragging) return;
                     e.stopPropagation();
+                    
                     const vh = viewportHeight;
                     const partialHeightCalc = vh * 0.5;
                     const currentY = getPositionY() + listDragY;
@@ -916,9 +999,25 @@ function MarosaLocator() {
                             ref={mobileListContentRef}
                             className={styles.mobileLocationListContent}
                             onTouchStart={(e) => {
-                                // Allow scrolling in content, but prevent drag if scrolling
+                                // Allow scrolling in content, but prevent drag if already dragging
                                 if (isDragging) {
                                     e.stopPropagation();
+                                }
+                            }}
+                            onTouchMove={(e) => {
+                                // If user is scrolling the content, stop any drag operation
+                                if (isDragging && mobileListContentRef.current) {
+                                    const scrollTop = mobileListContentRef.current.scrollTop;
+                                    const scrollHeight = mobileListContentRef.current.scrollHeight;
+                                    const clientHeight = mobileListContentRef.current.clientHeight;
+                                    const isScrollable = scrollHeight > clientHeight;
+                                    const isAtTop = scrollTop === 0;
+                                    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+                                    
+                                    // If content is scrollable and not at boundaries, allow scrolling
+                                    if (isScrollable && !isAtTop && !isAtBottom) {
+                                        setIsDragging(false);
+                                    }
                                 }
                             }}
                         >

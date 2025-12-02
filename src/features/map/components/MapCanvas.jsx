@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { GoogleMap, MarkerF, InfoWindow, Data, MarkerClustererF } from '@react-google-maps/api';
 
 import CustomInfoWindowCard from './CustomInfoWindowCard';
@@ -31,8 +31,32 @@ const MapCanvas = ({
 
     const center = currentUserPosition || DEFAULT_CENTER;
 
+    // Ensure map resizes when container size changes
+    useEffect(() => {
+        if (map && window.google && window.google.maps) {
+            const handleResize = () => {
+                try {
+                    window.google.maps.event.trigger(map, 'resize');
+                } catch (e) {
+                    console.warn('Failed to trigger map resize:', e);
+                }
+            };
+            
+            // Trigger resize after a short delay to ensure DOM is ready
+            const timer = setTimeout(handleResize, 100);
+            
+            // Also listen to window resize
+            window.addEventListener('resize', handleResize);
+            
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener('resize', handleResize);
+            };
+        }
+    }, [map]);
+
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%' }}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={center}
