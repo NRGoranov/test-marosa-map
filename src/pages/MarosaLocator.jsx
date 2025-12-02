@@ -684,7 +684,7 @@ function MarosaLocator() {
                                     <p className={styles.heroEyebrow}>Градинарят знае най-добре</p>
                                 )}
                                 <h1 className={`${styles.heroTitle} ${isDesktop && showLocationList ? styles.heroTitleCompact : ''}`}>
-                                    Мароса вече е по-близо до теб.<br />Търси ни в<span className={styles.heroHighlight}>цялата страна</span>
+                                    Мароса е по-близо до теб Търси ни в<span className={styles.heroHighlight}>цялата страна</span>
                                 </h1>
                                 <form className={styles.searchRow} onSubmit={handleSearchSubmit}>
                                     <div className={styles.searchInput}>
