@@ -58,7 +58,7 @@ function MarosaLocator() {
     
     const [headerHeight, setHeaderHeight] = useState(80);
     const headerRef = useRef(null);
-    const peekHeight = 65; // Reduced to show only the heading (drag handle + header with title)
+    const peekHeight = 120;
     
     // Update viewport height and header height on resize
     useEffect(() => {
@@ -140,9 +140,6 @@ function MarosaLocator() {
     }, []);
 
     const handleMapClick = useCallback(() => {
-        // Enter FVM on ANY click on the map - trigger hasMapInteracted immediately
-        setHasMapInteracted(true);
-        
         // Use setTimeout to allow the marker click event to complete first
         setTimeout(() => {
             if (!markerClickRef.current) {
@@ -247,19 +244,26 @@ function MarosaLocator() {
             finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
         }
 
-        // Preserve all image properties - don't set a fallback here, let ShareModal handle it
+        // Get image URL with fallback
+        let imageUrl = location.imageUrl;
+        if (!imageUrl && location.photos?.[0]?.getUrl) {
+            try {
+                imageUrl = location.photos[0].getUrl({ maxWidth: 400, maxHeight: 400 });
+            } catch (e) {
+                console.warn('Failed to get photo URL:', e);
+            }
+        }
+        if (!imageUrl) {
+            imageUrl = 'https://i.imgur.com/g2a4JAh.png'; // Fallback image
+        }
+
         const comprehensiveLocationData = {
             ...location,
             name: name,
             displayName: { text: name },
             rating: location.rating || 5,
             mapsUrl: finalMapsUrl,
-            // Preserve all image properties so ShareModal can prioritize them correctly
-            image: location.image,
-            imageUrl: location.imageUrl,
-            coverPhoto: location.coverPhoto,
-            gallery: location.gallery,
-            photos: location.photos, // Keep photos array for getUrl() calls
+            imageUrl: imageUrl,
             icon: location.icon // Explicitly preserve the icon property
         };
 
@@ -534,7 +538,7 @@ function MarosaLocator() {
 
             <StyleInjector />
 
-            <div className={styles.shell}>
+            <div className={`${styles.shell} ${isDesktop && showLocationList ? styles.shellWithShops : ''}`}>
                 {!isDesktop && (
                     <header 
                         ref={headerRef}
@@ -660,6 +664,7 @@ function MarosaLocator() {
                                 <div 
                                     className={styles.heroLogo}
                                     onClick={() => window.location.reload()}
+                                    style={{ cursor: 'pointer' }}
                                     role="button"
                                     tabIndex={0}
                                     aria-label="Refresh page"
@@ -737,7 +742,7 @@ function MarosaLocator() {
                             <div className={styles.desktopLocationList}>
                                 <div className={styles.desktopLocationListHeader}>
                                     <h3 className={styles.desktopLocationListTitle}>
-                                       <strong> {visibleLocations.length}</strong> намерени обекта
+                                        Обекти в изгледа ({visibleLocations.length})
                                     </h3>
                                 </div>
                                 <div 
@@ -854,7 +859,7 @@ function MarosaLocator() {
 
             {!isDesktop && (
                 !!locationToShare || 
-                (isSearchOpen && searchQuery.trim().length > 0) || 
+                isSearchOpen || 
                 isMenuOpen || 
                 (showLocationList && (listPosition === 'partial' || listPosition === 'full'))
             ) && (
@@ -862,19 +867,14 @@ function MarosaLocator() {
                     onClick={() => {
                         if (locationToShare) {
                             setLocationToShare(null);
-                        } else {
-                            // Close both search and cardlist, return to clean map view
+                        } else if (isSearchOpen) {
                             setIsSearchOpen(false);
+                        } else if (isMenuOpen) {
                             setIsMenuOpen(false);
-                            setSearchQuery('');
-                            if (showLocationList && (listPosition === 'partial' || listPosition === 'full')) {
-                                setListPosition('peek');
-                                setListDragY(0);
-                            }
-                            // Blur search input if it exists
-                            if (headerSearchInputRef.current) {
-                                headerSearchInputRef.current.blur();
-                            }
+                        } else if (showLocationList && (listPosition === 'partial' || listPosition === 'full')) {
+                            // Push the list down to peek mode instead of hiding it
+                            setListPosition('peek');
+                            setListDragY(0);
                         }
                     }}
                 />
@@ -894,7 +894,7 @@ function MarosaLocator() {
                 
                 const getPositionY = () => {
                     // Position from top of viewport
-                    const peek = vh - peekHeight; // Show only heading at bottom (~65px)
+                    const peek = vh - peekHeight; // Show 120px at bottom
                     const partial = vh - partialHeightCalc; // Show 50% of screen
                     const full = headerHeight; // Show from header to bottom
                     
@@ -1005,52 +1005,46 @@ function MarosaLocator() {
                             onTouchEnd={handleTouchEnd}
                         >
                             <h3 className={styles.mobileLocationListTitle}>
-                                {listPosition === 'peek' ? (
-                                    <><strong>{visibleLocations.length}</strong> намерени обекта</>
-                                ) : (
-                                    <>{visibleLocations.length} намерени обекта</>
-                                )}
+                                Обекти в изгледа ({visibleLocations.length})
                             </h3>
                         </div>
-                        {listPosition !== 'peek' && (
-                            <div 
-                                ref={mobileListContentRef}
-                                className={styles.mobileLocationListContent}
-                                onTouchStart={(e) => {
-                                    // Allow scrolling in content, but prevent drag if already dragging
-                                    if (isDragging) {
-                                        e.stopPropagation();
+                        <div 
+                            ref={mobileListContentRef}
+                            className={styles.mobileLocationListContent}
+                            onTouchStart={(e) => {
+                                // Allow scrolling in content, but prevent drag if already dragging
+                                if (isDragging) {
+                                    e.stopPropagation();
+                                }
+                            }}
+                            onTouchMove={(e) => {
+                                // If user is scrolling the content, stop any drag operation
+                                if (isDragging && mobileListContentRef.current) {
+                                    const scrollTop = mobileListContentRef.current.scrollTop;
+                                    const scrollHeight = mobileListContentRef.current.scrollHeight;
+                                    const clientHeight = mobileListContentRef.current.clientHeight;
+                                    const isScrollable = scrollHeight > clientHeight;
+                                    const isAtTop = scrollTop === 0;
+                                    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+                                    
+                                    // If content is scrollable and not at boundaries, allow scrolling
+                                    if (isScrollable && !isAtTop && !isAtBottom) {
+                                        setIsDragging(false);
                                     }
-                                }}
-                                onTouchMove={() => {
-                                    // If user is scrolling the content, stop any drag operation
-                                    if (isDragging && mobileListContentRef.current) {
-                                        const scrollTop = mobileListContentRef.current.scrollTop;
-                                        const scrollHeight = mobileListContentRef.current.scrollHeight;
-                                        const clientHeight = mobileListContentRef.current.clientHeight;
-                                        const isScrollable = scrollHeight > clientHeight;
-                                        const isAtTop = scrollTop === 0;
-                                        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-                                        
-                                        // If content is scrollable and not at boundaries, allow scrolling
-                                        if (isScrollable && !isAtTop && !isAtBottom) {
-                                            setIsDragging(false);
-                                        }
-                                    }
-                                }}
-                            >
-                                <LocationListWeb
-                                    locations={sortedLocations}
-                                    selectedPlaceId={selectedPlace?.id}
-                                    hoveredPlaceId={hoveredPlaceId}
-                                    onListItemClick={handleMarkerClick}
-                                    onListItemHover={setHoveredPlaceId}
-                                    onShareClick={handleShareClick}
-                                    isMobileView={true}
-                                    itemRefs={itemRefs}
-                                />
-                            </div>
-                        )}
+                                }
+                            }}
+                        >
+                            <LocationListWeb
+                                locations={sortedLocations}
+                                selectedPlaceId={selectedPlace?.id}
+                                hoveredPlaceId={hoveredPlaceId}
+                                onListItemClick={handleMarkerClick}
+                                onListItemHover={setHoveredPlaceId}
+                                onShareClick={handleShareClick}
+                                isMobileView={true}
+                                itemRefs={itemRefs}
+                            />
+                        </div>
                     </div>
                 );
             })()}

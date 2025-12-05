@@ -225,6 +225,22 @@ const StyleInjector = () => (
         .animate-scaleIn {
             animation: scaleIn 0.3s ease-out;
         }
+
+        /* Hide cluster numbers by default */
+        .gm-style div[style*="text-align: center"],
+        .gm-style div[style*="text-align:center"],
+        .gm-style div[style*="TEXT-ALIGN: center"],
+        .gm-style div[style*="TEXT-ALIGN:center"] {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        /* Ensure cluster elements are interactive but don't block map */
+        .gm-style div[style*="position: absolute"]:has(img[src*="data:image/svg+xml"]) {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
         `}
     </style>
 );

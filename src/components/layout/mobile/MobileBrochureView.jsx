@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Document, Page, pdfjs } from 'react-pdf';
-import HTMLFlipBook from 'react-pageflip';
+import { useTransition, animated } from '@react-spring/web';
+import { useDrag } from '@use-gesture/react';
 import { useNavigate } from 'react-router-dom';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Helmet } from 'react-helmet-async';
@@ -31,14 +32,12 @@ const MobileBrochureView = () => {
     const [currentPage, setCurrentPage] = useState(getInitialPage());
     const [totalPages, setTotalPages] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [slideDirection, setSlideDirection] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [pageAspectRatio, setPageAspectRatio] = useState(null);
     const [isZoomed, setIsZoomed] = useState(false);
-    const [pageImages, setPageImages] = useState([]);
-    const [isLoadingPages, setIsLoadingPages] = useState(true);
 
     const pdfContainerRef = useRef(null);
-    const flipBookRef = useRef(null);
 
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
@@ -70,59 +69,54 @@ const MobileBrochureView = () => {
 
     const onDocumentLoadSuccess = async (pdf) => {
         setTotalPages(pdf.numPages);
-        setIsLoadingPages(true);
 
         if (pdf.numPages > 0) {
             const page = await pdf.getPage(1);
+
             const viewport = page.getViewport({ scale: 1 });
+
             setPageAspectRatio(viewport.width / viewport.height);
-
-            // Convert all PDF pages to images for react-pageflip
-            const images = [];
-            const scale = Math.min(window.devicePixelRatio || 2, 3);
-            const renderPromises = [];
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-                renderPromises.push(
-                    pdf.getPage(i).then(async (page) => {
-                        const viewport = page.getViewport({ scale });
-                        const canvas = document.createElement('canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-
-                        await page.render({
-                            canvasContext: context,
-                            viewport: viewport
-                        }).promise;
-
-                        return canvas.toDataURL('image/png');
-                    })
-                );
-            }
-
-            const renderedImages = await Promise.all(renderPromises);
-            setPageImages(renderedImages);
-            setIsLoadingPages(false);
         }
     };
 
-    const handleFlip = useCallback((e) => {
-        const newPage = e.data + 1; // react-pageflip uses 0-based index
-        setCurrentPage(newPage);
-    }, []);
-
     const handleNext = useCallback(() => {
-        if (flipBookRef.current && currentPage < totalPages) {
-            flipBookRef.current.pageFlip().flipNext();
+        if (currentPage < totalPages) {
+            setSlideDirection(1);
+
+            setCurrentPage(prev => prev + 1);
         }
+
     }, [currentPage, totalPages]);
 
     const handlePrevious = useCallback(() => {
-        if (flipBookRef.current && currentPage > 1) {
-            flipBookRef.current.pageFlip().flipPrev();
+        if (currentPage > 1) {
+            setSlideDirection(-1);
+
+            setCurrentPage(prev => prev - 1);
         }
     }, [currentPage]);
+
+    const bind = useDrag(({ swipe: [swipeX], event }) => {
+        if (isZoomed) return;
+
+        event.preventDefault();
+
+        if (swipeX < 0) handleNext();
+
+        else if (swipeX > 0) handlePrevious();
+    }, {
+        axis: 'x',
+        filterTaps: true,
+    });
+
+    const pageTransitions = useTransition(currentPage, {
+        key: currentPage,
+        from: { transform: `translateX(${slideDirection * 100}%)`, opacity: 0 },
+        enter: { transform: 'translateX(0%)', opacity: 1 },
+        leave: { transform: `translateX(${-slideDirection * 100}%)`, opacity: 0 },
+        config: { tension: 270, friction: 30 },
+        exitBeforeEnter: true,
+    });
 
     const handleShare = async () => {
         const shareData = {
@@ -146,21 +140,23 @@ const MobileBrochureView = () => {
         }
     };
 
-    const getFlipBookSize = () => {
+    const getPageProps = () => {
+
         if (!pageAspectRatio || containerSize.width === 0 || containerSize.height === 0) {
-            return { width: containerSize.width || 400, height: containerSize.height || 600 };
+            return { width: containerSize.width ? containerSize.width - 32 : undefined };
         }
 
         const padding = 32;
+
         const availableWidth = containerSize.width - padding;
         const availableHeight = containerSize.height - padding;
         const containerAspectRatio = availableWidth / availableHeight;
 
         if (pageAspectRatio < containerAspectRatio) {
-            return { width: availableHeight * pageAspectRatio, height: availableHeight };
+            return { height: availableHeight };
         }
 
-        return { width: availableWidth, height: availableWidth / pageAspectRatio };
+        return { width: availableWidth };
     };
 
     const progress = totalPages > 0 ? (currentPage / totalPages) * 100 : 0;
@@ -199,63 +195,32 @@ const MobileBrochureView = () => {
                 </button>
             </div>
 
-            <div className="flex-grow bg-gray-100 overflow-hidden relative flex items-center justify-center" ref={pdfContainerRef}>
-                {isLoadingPages ? (
-                    <div className="text-center text-gray-500 p-10">Зареждане на PDF...</div>
-                ) : pageImages.length > 0 ? (
-                    <Document
-                        file={pdfFile}
-                        onLoadSuccess={onDocumentLoadSuccess}
-                        error="Неуспешно зареден PDF."
-                        className="w-full h-full flex items-center justify-center"
-                    >
-                        <div className="flex items-center justify-center" style={{ width: '100%', height: '100%' }}>
-                            <HTMLFlipBook
-                                ref={flipBookRef}
-                                width={getFlipBookSize().width}
-                                height={getFlipBookSize().height}
-                                size="stretch"
-                                minWidth={300}
-                                maxWidth={800}
-                                minHeight={400}
-                                maxHeight={1200}
-                                maxShadowOpacity={0.5}
-                                showCover={true}
-                                mobileScrollSupport={true}
-                                onFlip={handleFlip}
-                                className="cursor-pointer"
-                                style={{ margin: '0 auto' }}
+            <div className="flex-grow bg-gray-100 overflow-hidden relative" ref={pdfContainerRef}>
+                <Document
+                    file={pdfFile}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    error="Неуспешно зареден PDF."
+                    loading={<div className="text-center text-gray-500 p-10">Зареждане на PDF...</div>}
+                    className="w-full h-full"
+                >
+
+                    <div {...bind()} className="relative w-full h-full touch-none">
+                        {pageTransitions((style, pageNum) => (
+                            <animated.div
+                                style={style}
+                                className="absolute inset-0 flex justify-center items-center p-4 cursor-zoom-in"
+                                onClick={() => setIsZoomed(true)}
                             >
-                                {pageImages.map((imageSrc, index) => (
-                                    <div
-                                        key={index}
-                                        className="page"
-                                        style={{
-                                            backgroundColor: 'white',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            padding: '10px',
-                                        }}
-                                        onClick={() => setIsZoomed(true)}
-                                    >
-                                        <img
-                                            src={imageSrc}
-                                            alt={`Page ${index + 1}`}
-                                            style={{
-                                                maxWidth: '100%',
-                                                maxHeight: '100%',
-                                                objectFit: 'contain',
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </HTMLFlipBook>
-                        </div>
-                    </Document>
-                ) : (
-                    <div className="text-center text-gray-500 p-10">Грешка при зареждане на PDF.</div>
-                )}
+                                <Page
+                                    key={pageNum}
+                                    pageNumber={pageNum}
+                                    {...getPageProps()}
+                                    devicePixelRatio={Math.min(window.devicePixelRatio || 1, 3)}
+                                />
+                            </animated.div>
+                        ))}
+                    </div>
+                </Document>
             </div>
 
             <div className="flex-shrink-0 flex justify-between items-center p-4">
